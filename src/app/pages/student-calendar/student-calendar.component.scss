@@ -1,0 +1,17 @@
+.calendar-page {
+  padding: 40px 0;
+  h2 {
+    color: #8e53ff;
+    text-align: center;
+    margin-bottom: 25px;
+  }
+  .day-details-card {
+    animation: fadeIn .35s;
+    text-align: center;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(35px);}
+  to { opacity: 1; transform: none;}
+}

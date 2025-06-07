@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&display=swap');
+
+.login-root {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #6f82f7 0%, #e86bf8 100%);
+  font-family: 'Manrope', Arial, sans-serif;
+}
+
+.login-box {
+  background: white;
+  padding: 40px 40px 30px;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px #a170f9aa;
+  width: 360px;
+  max-width: 90vw;
+  text-align: center;
+}
+
+.login-title {
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: #4a3fbf;
+  margin-bottom: 28px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .full-width {
+    width: 100%;
+  }
+}
+
+.login-btn {
+  padding: 14px 0;
+  font-weight: 700;
+  font-size: 1.15rem;
+  border-radius: 24px;
+  background: linear-gradient(90deg, #a371ff 0%, #ed69f5 100%);
+  color: white;
+  box-shadow: 0 4px 25px #c187fc80;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+  cursor: pointer;
+
+  &:hover:enabled {
+    box-shadow: 0 6px 30px #c186fccc;
+    transform: scale(1.05);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}
+
+.signup-text {
+  margin-top: 20px;
+  font-size: 1rem;
+  color: #555;
+  a {
+    color: #6f82f7;
+    text-decoration: none;
+    font-weight: 600;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.input-error {
+  color: #f14a6a;
+  font-size: 0.98em;
+  text-align: left;
+  margin: -16px 0 8px 5px;
+}
+
+.success-msg {
+  color: #1ca95d;
+  font-weight: bold;
+  font-size: 1.05em;
+  text-align: left;
+  margin: 2px 0 8px 5px;
+}
+
+/* Scroll reveal animation */
+.fade-up-on-scroll {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s cubic-bezier(.3,1.2,.5,1.15), transform 0.7s cubic-bezier(.3,1.2,.5,1.15);
+}
+
+.fade-up-on-scroll.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}

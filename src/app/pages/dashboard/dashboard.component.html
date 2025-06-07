@@ -1,0 +1,26 @@
+<div class="dashboard-layout">
+  <nav class="sidebar">
+    <div class="logo">
+      <img src="assets/logo.png" alt="Logo" />
+      <span>Face<span style="color:#b993f7">AI</span></span>
+    </div>
+    <ul>
+      <li [class.active]="activeTab === 'attendees'" (click)="selectTab('attendees')">
+        <span class="icon"><mat-icon>groups</mat-icon></span> Attendees
+      </li>
+      <li [class.active]="activeTab === 'instructors'" (click)="selectTab('instructors')">
+        <span class="icon"><mat-icon>school</mat-icon></span> Instructors
+      </li>
+      <li [class.active]="activeTab === 'subjects'" (click)="selectTab('subjects')">
+        <span class="icon"><mat-icon>menu_book</mat-icon></span> Subjects
+      </li>
+    </ul>
+  </nav>
+  <main class="dashboard-main">
+    <ng-container [ngSwitch]="activeTab">
+      <app-attendees *ngSwitchCase="'attendees'"></app-attendees>
+      <app-instructors *ngSwitchCase="'instructors'"></app-instructors>
+      <app-subjects *ngSwitchCase="'subjects'"></app-subjects>
+    </ng-container>
+  </main>
+</div>

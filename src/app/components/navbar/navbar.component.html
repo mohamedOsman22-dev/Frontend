@@ -1,0 +1,19 @@
+<nav class="main-navbar">
+  <div class="navbar-logo">Face <span>AI</span></div>
+  <div class="navbar-links">
+    <a *ngFor="let link of navLinks"
+      [routerLink]="!link.logout ? link.route : null"
+      routerLinkActive="active-link"
+      [ngClass]="{'logout-link': link.logout}"
+      (click)="handleNav(link)">
+      {{ link.label }}
+    </a>
+  </div>
+  <button class="theme-btn" (click)="toggleTheme()" aria-label="Toggle theme">
+    <span *ngIf="theme === 'light'" class="material-icons">dark_mode</span>
+    <span *ngIf="theme === 'dark'" class="material-icons">light_mode</span>
+  </button>
+  <button (click)="toggleLang()">
+    {{ lang === 'ar' ? 'EN' : 'ع' }}
+  </button>
+</nav>

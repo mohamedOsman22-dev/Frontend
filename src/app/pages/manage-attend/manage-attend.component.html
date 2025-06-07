@@ -1,0 +1,52 @@
+<div class="manage-attend-root">
+  <h2 class="page-title fade-up-on-scroll">Manage Attendance</h2>
+
+  <div class="manage-table-wrap fade-up-on-scroll">
+    <table mat-table [dataSource]="records" class="mat-elevation-z2 manage-table">
+
+      <!-- Employee ID -->
+      <ng-container matColumnDef="empId">
+        <th mat-header-cell *matHeaderCellDef>Employee ID</th>
+        <td mat-cell *matCellDef="let record">{{record.empId}}</td>
+      </ng-container>
+
+      <!-- Employee Name -->
+      <ng-container matColumnDef="empName">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let record">{{record.empName}}</td>
+      </ng-container>
+
+      <!-- Date -->
+      <ng-container matColumnDef="date">
+        <th mat-header-cell *matHeaderCellDef>Date</th>
+        <td mat-cell *matCellDef="let record">{{record.date}}</td>
+      </ng-container>
+
+      <!-- Status -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let record">
+          <mat-chip [color]="record.status === 'Present' ? 'primary' : 'warn'" selected>
+            {{record.status}}
+          </mat-chip>
+        </td>
+      </ng-container>
+
+      <!-- Actions -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let record">
+          <button mat-icon-button color="accent" (click)="editRecord(record)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="deleteRecord(record)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+</div>
