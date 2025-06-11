@@ -1,59 +1,33 @@
-<div class="login-root">
-  <div class="login-box fade-up-on-scroll">
-    <h2 class="login-title">Welcome Back</h2>
-    <form #loginForm="ngForm" (ngSubmit)="login(loginForm)" class="login-form" autocomplete="off">
-      <!-- Email Field -->
+<div class="login-container">
+  <div class="login-card">
+    <h1 class="login-title">Login</h1>
+    <form [formGroup]="loginForm" (ngSubmit)="login()">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Email</mat-label>
-        <input matInput type="email" name="email" [(ngModel)]="email" required email #emailCtrl="ngModel" />
-        <mat-error *ngIf="emailCtrl.invalid && (emailCtrl.dirty || emailCtrl.touched)">
-          <span *ngIf="emailCtrl.errors?.['required']">Email is required.</span>
-          <span *ngIf="emailCtrl.errors?.['email']">Enter a valid email.</span>
-        </mat-error>
+        <input matInput formControlName="email" type="email" required>
       </mat-form-field>
 
-      <!-- Password Field + Show/Hide -->
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Password</mat-label>
-        <input
-          matInput
-          [type]="showPassword ? 'text' : 'password'"
-          name="password"
-          [(ngModel)]="password"
-          required
-          minlength="6"
-          #passwordCtrl="ngModel"
-        />
-        <button mat-icon-button matSuffix type="button" (click)="showPassword = !showPassword" tabindex="-1">
-          <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-        </button>
-        <mat-error *ngIf="passwordCtrl.invalid && (passwordCtrl.dirty || passwordCtrl.touched)">
-          <span *ngIf="passwordCtrl.errors?.['required']">Password is required.</span>
-          <span *ngIf="passwordCtrl.errors?.['minlength']">Password must be at least 6 characters.</span>
-        </mat-error>
+        <input matInput formControlName="password" type="password" required>
       </mat-form-field>
 
-      <!-- Error/Success Message -->
-      <div *ngIf="errorMsg" class="login-error">
-        <mat-icon color="warn">error</mat-icon> {{ errorMsg }}
-      </div>
-      <div *ngIf="successMsg" class="login-success">
-        <mat-icon color="primary">check_circle</mat-icon> {{ successMsg }}
-      </div>
-
-      <!-- Login Button -->
-      <button mat-raised-button color="primary" [disabled]="!loginForm.form.valid || loading" class="login-btn">
-        <ng-container *ngIf="!loading; else loadingTpl">Login</ng-container>
-        <ng-template #loadingTpl>
-          <mat-spinner [diameter]="26" color="primary"></mat-spinner>
-        </ng-template>
+      <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid || loading" class="full-width">
+        <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+        <span *ngIf="!loading">Login</span>
       </button>
 
-      <p class="signup-text">Don't have an account? <a [routerLink]="['/signup']" routerLinkActive="router-link-active" >Sign Up</a></p>
-    </form>
+      <div *ngIf="errorMsg" class="error-message">
+        {{ errorMsg }}
+      </div>
 
-    <!-- Role Banner (اختياري للعرض بعد الدخول) -->
-    <div *ngIf="userRole === 'student'" class="role-banner">Student Login (محتوى الطالب هنا فقط)</div>
-    <div *ngIf="userRole === 'instructor'" class="role-banner">Instructor Login (محتوى المدرس هنا فقط)</div>
+      <div *ngIf="successMsg" class="success-message">
+        {{ successMsg }}
+      </div>
+
+      <div class="signup-link">
+        Don't have an account? <a routerLink="/signup">Sign up</a>
+      </div>
+    </form>
   </div>
 </div>

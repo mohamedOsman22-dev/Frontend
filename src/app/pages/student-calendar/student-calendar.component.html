@@ -1,16 +1,18 @@
+<app-navbar-student />
 <div class="calendar-page">
-  <h2>My Attendance Calendar</h2>
-  <div style="background: #fff; border-radius: 18px; box-shadow: 0 4px 18px #b6b6f425; padding: 18px; max-width: 900px; margin: 0 auto;">
-    <mwl-calendar-month-view
-      [viewDate]="viewDate"
-      [events]="attendance"
-      [activeDayIsOpen]="false"
-      (dayClicked)="dayClicked($event.day)">
-    </mwl-calendar-month-view>
-  </div>
-  <div *ngIf="selectedDay" class="day-details-card" style="margin: 18px auto; max-width: 350px; background: #f5f2fd; border-radius: 15px; box-shadow: 0 2px 8px #b993f766; padding: 19px;">
-    <h3 style="margin-bottom: 7px;">{{selectedDayTitle}}</h3>
-    <div style="font-size: 1.05em;">{{selectedDayContent}}</div>
-    <div style="color:#888; font-size: .93em; margin-top: 8px;">Date: {{selectedDay | date:'fullDate'}}</div>
+  <h2 class="calendar-title">My Attendance Calendar</h2>
+  <full-calendar [options]="calendarOptions"></full-calendar>
+
+  <div class="calendar-details" *ngIf="selectedEvent">
+    <ng-container *ngIf="selectedEvent.title !== 'No Lecture'; else emptyDay">
+      <h3>{{selectedEvent.title}}</h3>
+      <p><b>Date:</b> {{selectedEvent.date | date:'fullDate'}}</p>
+      <p><b>Time:</b> {{selectedEvent.extendedProps.time}}</p>
+      <p><b>Details:</b> {{selectedEvent.extendedProps.details}}</p>
+    </ng-container>
+    <ng-template #emptyDay>
+      <h3>No Lectures</h3>
+      <p>Date: {{selectedEvent.date | date:'fullDate'}}</p>
+    </ng-template>
   </div>
 </div>

@@ -1,51 +1,180 @@
-import { Component, HostListener, AfterViewInit, Renderer2, ElementRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
-import { MatChipsModule } from '@angular/material/chips';
+import { FormsModule, FormGroup, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { RouterModule } from '@angular/router';
+import { NavbarInstructorComponent } from '../../components/navbar/navbar-instructor.component';
+import { AttendanceService } from '../../services/attendance.service';
+import { EnrollmentService } from '../../../app/services/enrollment.service';
+import { NgForm } from '@angular/forms';
+import { environment } from '../../../environments/environment';
 
-interface Attendance {
-  id: number;
+interface SubjectInfo {
+  id: string;
   name: string;
-  status: 'Present' | 'Absent';
-  time: string;
+  instructor?: string;
+}
+
+interface Student {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface AttendanceResponse {
+  id: string;
+  studentId: string;
+  subjectId: string;
+  attendanceTime: string;
 }
 
 @Component({
   selector: 'app-face-attend',
   standalone: true,
-  imports: [CommonModule, MatTableModule, MatChipsModule],
   templateUrl: './face-attend.component.html',
-  styleUrls: ['./face-attend.component.scss']
+  styleUrls: ['./face-attend.component.scss'],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    RouterModule,
+    NavbarInstructorComponent
+  ]
 })
-export class FaceAttendComponent implements AfterViewInit {
-  attendance: Attendance[] = [
-    { id: 1, name: 'Ahmed Mahmoud', status: 'Present', time: '08:02 AM' },
-    { id: 2, name: 'Sara Ali', status: 'Absent', time: '-' },
-    { id: 3, name: 'Mohamed Samir', status: 'Present', time: '08:15 AM' },
-    { id: 4, name: 'Omar Hesham', status: 'Present', time: '08:01 AM' },
-  ];
+export class FaceAttendComponent implements OnInit {
+  attendanceForm: FormGroup;
+  subjectInfo: SubjectInfo = { id: '', name: '' };
+  enrolledStudents: Student[] = [];
+  attendanceList: AttendanceResponse[] = [];
+  loading = false;
+  errorMsg = '';
+  successMsg = '';
 
-  displayedColumns = ['id', 'name', 'status', 'time'];
+  constructor(
+    private fb: FormBuilder,
+    private attendanceService: AttendanceService,
+    private enrollmentService: EnrollmentService
+  ) {
+    this.attendanceForm = this.fb.group({
+      subjectId: ['', Validators.required],
+      studentId: ['', Validators.required]
+    });
+  }
 
-  constructor(private renderer: Renderer2, private el: ElementRef) {}
+  ngOnInit(): void {
+    this.fetchAttendance();
+  }
 
-  @HostListener('window:scroll', [])
-  onScroll() {
-    const elements = this.el.nativeElement.querySelectorAll('.fade-up-on-scroll');
-    elements.forEach((el: HTMLElement) => {
-      const rect = el.getBoundingClientRect();
-      if (rect.top < window.innerHeight - 50) {
-        this.renderer.addClass(el, 'revealed');
+  fetchAttendance(): void {
+    this.enrollmentService.getStudentsBySubjectId(this.subjectInfo.id).subscribe({
+      next: (data: Student[]) => {
+        this.enrolledStudents = data;
+      },
+      error: (error: string) => {
+        this.errorMsg = 'Failed to fetch students';
       }
     });
   }
 
-  ngAfterViewInit() {
-    setTimeout(() => {
-      const elements = this.el.nativeElement.querySelectorAll('.fade-up-on-scroll');
-      elements.forEach((el: HTMLElement) => {
-        this.renderer.addClass(el, 'revealed');
+  openCamera() {
+    alert("📸 Camera launched (placeholder logic)");
+  }
+
+  submitAttendance(): void {
+    if (this.attendanceForm.invalid) {
+      return;
+    }
+
+    this.loading = true;
+    this.errorMsg = '';
+    this.successMsg = '';
+
+    const { subjectId, studentId } = this.attendanceForm.value;
+
+    this.attendanceService.recordAttendance({
+      studentId,
+      subjectId,
+      attendanceTime: new Date()
+    }).subscribe({
+      next: (response: AttendanceResponse) => {
+        this.loading = false;
+        this.successMsg = 'Attendance recorded successfully!';
+        this.attendanceForm.reset();
+      },
+      error: (error: string) => {
+        this.loading = false;
+        this.errorMsg = error;
+      }
+    });
+  }
+
+  downloadReport() {
+    const docDefinition: any = {
+      content: [
+        {
+          text: 'Attendance Report',
+          style: 'header',
+          alignment: 'center',
+          margin: [0, 0, 0, 20]
+        },
+        {
+          table: {
+            headerRows: 1,
+            widths: ['*', '*', '*'],
+            body: [
+              ['Attendee Name', 'Attendee ID', 'Time'],
+              ...this.enrolledStudents.map((student: Student) => [
+                student.name || '---',
+                student.id,
+                student.email
+              ])
+            ]
+          },
+          layout: 'lightHorizontalLines'
+        },
+        {
+          columns: [
+            {
+              width: '50%',
+              margin: [0, 30, 0, 0],
+              table: {
+                body: [
+                  ['Subject:', this.subjectInfo.name],
+                  ['Instructor:', this.subjectInfo.instructor || '---'],
+                  ['Date:', new Date().toLocaleString()]
+                ]
+              },
+              layout: {
+                hLineWidth: () => 1,
+                vLineWidth: () => 1
+              }
+            },
+            { width: '*', text: '' }
+          ]
+        }
+      ],
+      styles: {
+        header: {
+          fontSize: 20,
+          bold: true
+        }
+      }
+    };
+
+    // @ts-ignore
+    import('pdfmake/build/pdfmake').then((pdfmake) => {
+      // @ts-ignore
+      import('pdfmake/build/vfs_fonts').then((vfsFonts) => {
+        pdfmake.vfs = vfsFonts?.pdfMake?.vfs || vfsFonts?.vfs;
+        pdfmake.createPdf(docDefinition).download('attendance_report.pdf');
       });
-    }, 500);
+    });
   }
 }

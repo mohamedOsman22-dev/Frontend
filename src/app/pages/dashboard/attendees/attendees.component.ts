@@ -31,7 +31,7 @@ export class AttendeesComponent implements OnInit {
   constructor(private dataService: DataService) {}
 
   ngOnInit() {
-    this.dataService.getStudents().subscribe((attendees: Attendee[]) => {
+    this.dataService.getStudents().subscribe((attendees: any[]) => {
       this.attendees = attendees;
       this.filteredAttendees = this.filterAttendees();
       if (this.selectedAttendee) {
@@ -40,8 +40,8 @@ export class AttendeesComponent implements OnInit {
         this.selectedAttendee = this.filteredAttendees[0];
       }
     });
-    this.dataService.getSubjects().subscribe((subjects: Subject[]) => this.subjects = subjects);
-    this.dataService.getInstructors().subscribe((instructors: Instructor[]) => this.instructors = instructors);
+    this.dataService.getSubjects().subscribe((subjects: any[]) => this.subjects = subjects);
+    this.dataService.getInstructors().subscribe((instructors: any[]) => this.instructors = instructors);
   }
 
   
@@ -78,12 +78,9 @@ export class AttendeesComponent implements OnInit {
   saveAttendee() {
     if (this.editMode && this.selectedAttendee) {
       this.editAttendee.id = this.selectedAttendee.id;
-      Object.assign(this.selectedAttendee, this.editAttendee);
+      this.dataService.editStudent({ ...this.editAttendee });
     } else if (!this.editMode) {
-      this.editAttendee.id = Math.random().toString(36).substr(2, 8);
-      this.attendees.push({ ...this.editAttendee });
-      this.filteredAttendees = [...this.attendees];
-      this.selectedAttendee = { ...this.editAttendee };
+      this.dataService.addStudent({ ...this.editAttendee });
     }
     this.showDialog = false;
     this.onSearchChange();
@@ -91,10 +88,7 @@ export class AttendeesComponent implements OnInit {
 
   deleteAttendee(person: Attendee) {
     if (!person.id) return;
-    const idx = this.attendees.indexOf(person);
-    if (idx > -1) {
-      this.attendees.splice(idx, 1);
-    }
+    this.dataService.deleteStudent(person.id);
     this.onSearchChange();
     if (this.selectedAttendee?.id === person.id) {
       this.selectedAttendee = this.filteredAttendees[0] || null;

@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 // === Interfaces ===
 export interface Subject {
@@ -36,120 +38,92 @@ export interface Student {
 // =============== Service ===============
 @Injectable({ providedIn: 'root' })
 export class DataService {
-  // --- Dummy Initial Data ---
-  private _subjects = new BehaviorSubject<Subject[]>([
-    { id: 's1', name: 'Object Oriented Programming', instructorIds: [], dates: [] },
-    { id: 's2', name: 'Design Pattern', instructorIds: [], dates: [] },
-    { id: 's3', name: 'Computer Science', instructorIds: [], dates: [] },
-    { id: 's4', name: 'Artificial Intelligence', instructorIds: [], dates: [] }
-  ]);
-  private _instructors = new BehaviorSubject<Instructor[]>([
-    { id: 'i1', name: 'Mohamed Mabrouk', email: 'mabrouk@instructor.com', avatar: '', number: '01223344556', subjects: ['s1', 's2'] },
-    { id: 'i2', name: 'Sarah Medhat', email: 'sarah.medhat@instructor.com', avatar: '', number: '01022338877', subjects: ['s4'] }
-  ]);
-  private _students = new BehaviorSubject<Student[]>([
-    { id: 'st1', name: 'Ahmed Mahmoud', email: 'ahmed@student.com', avatar: '', number: '01112345678', assignedSubjects: ['s1', 's2'] },
-    { id: 'st2', name: 'Sara Adel', email: 'sara@student.com', avatar: '', number: '', assignedSubjects: [] }
-  ]);
+  private apiUrl = environment.apiUrl;
 
-  // --- Observables ---
-  getSubjects(): Observable<Subject[]>      { return this._subjects.asObservable(); }
-  getInstructors(): Observable<Instructor[]>{ return this._instructors.asObservable(); }
-  getStudents(): Observable<Student[]>      { return this._students.asObservable(); }
+  constructor(private http: HttpClient) {}
+
+  private getAuthHeaders() {
+    const token = localStorage.getItem('token');
+    return {
+      headers: new HttpHeaders({
+        Authorization: `Bearer ${token}`
+      })
+    };
+  }
+
+  getSubjects(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/Subjects`, this.getAuthHeaders());
+  }
+  getInstructors(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/Instructors`, this.getAuthHeaders());
+  }
+  getStudents(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/Attendees`, this.getAuthHeaders());
+  }
+
+  // ربط التسجيل بالـ API
+  register(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/Auth/register`, data);
+  }
 
   // --- Add/Edit/Delete Subjects ---
   addSubject(subj: Subject) {
     subj.id = subj.id || this.randomId('s');
     subj.instructorIds = subj.instructorIds || [];
     subj.dates = subj.dates || []; // <-- مهم جداً
-    this._subjects.next([...this._subjects.value, subj]);
+    this.http.post(`${this.apiUrl}/Subjects`, subj, this.getAuthHeaders()).subscribe();
   }
   editSubject(subj: Subject) {
-    const arr = this._subjects.value.map(s => s.id === subj.id ? { ...s, ...subj } : s);
-    this._subjects.next(arr);
+    this.http.put(`${this.apiUrl}/Subjects/${subj.id}`, subj, this.getAuthHeaders()).subscribe();
   }
   deleteSubject(subjId: string) {
-    this._subjects.next(this._subjects.value.filter(s => s.id !== subjId));
-    // Remove this subject from all instructors & students
-    this._instructors.next(this._instructors.value.map(ins => ({
-      ...ins, subjects: ins.subjects.filter(sid => sid !== subjId)
-    })));
-    this._students.next(this._students.value.map(st => ({
-      ...st, assignedSubjects: st.assignedSubjects.filter(sid => sid !== subjId)
-    })));
+    this.http.delete(`${this.apiUrl}/Subjects/${subjId}`, this.getAuthHeaders()).subscribe();
   }
 
   // --- Add/Edit/Delete Instructor ---
   addInstructor(ins: Instructor) {
     ins.id = ins.id || this.randomId('i');
     ins.subjects = ins.subjects || [];
-    this._instructors.next([...this._instructors.value, ins]);
-    this.syncSubjectInstructors();
+    this.http.post(`${this.apiUrl}/Instructors`, ins, this.getAuthHeaders()).subscribe();
   }
   editInstructor(ins: Instructor) {
-    this._instructors.next(this._instructors.value.map(i => i.id === ins.id ? { ...i, ...ins } : i));
-    this.syncSubjectInstructors();
+    this.http.put(`${this.apiUrl}/Instructors/${ins.id}`, ins, this.getAuthHeaders()).subscribe();
   }
   deleteInstructor(insId: string) {
-    this._instructors.next(this._instructors.value.filter(i => i.id !== insId));
-    // Remove instructor from all subjects
-    this._subjects.next(this._subjects.value.map(s => ({
-      ...s, instructorIds: (s.instructorIds || []).filter(id => id !== insId)
-    })));
+    this.http.delete(`${this.apiUrl}/Instructors/${insId}`, this.getAuthHeaders()).subscribe();
   }
 
   // --- Add/Edit/Delete Student ---
   addStudent(st: Student) {
     st.id = st.id || this.randomId('st');
     st.assignedSubjects = st.assignedSubjects || [];
-    this._students.next([...this._students.value, st]);
+    this.http.post(`${this.apiUrl}/Attendees`, st, this.getAuthHeaders()).subscribe();
   }
   editStudent(st: Student) {
-    this._students.next(this._students.value.map(s => s.id === st.id ? { ...s, ...st } : s));
+    this.http.put(`${this.apiUrl}/Attendees/${st.id}`, st, this.getAuthHeaders()).subscribe();
   }
   deleteStudent(stId: string) {
-    this._students.next(this._students.value.filter(s => s.id !== stId));
+    this.http.delete(`${this.apiUrl}/Attendees/${stId}`, this.getAuthHeaders()).subscribe();
   }
 
   // --- Assign subject to instructor ---
   assignSubjectToInstructor(insId: string, subjId: string) {
-    const instructors = this._instructors.value.map(ins => {
-      if (ins.id === insId && !ins.subjects.includes(subjId)) {
-        return { ...ins, subjects: [...ins.subjects, subjId] };
-      }
-      return ins;
-    });
-    this._instructors.next(instructors);
-    this.syncSubjectInstructors();
+    this.http.post(`${this.apiUrl}/Subjects/${subjId}/instructors/${insId}`, {}, this.getAuthHeaders()).subscribe();
   }
 
   // --- Assign subject to student ---
   assignSubjectToStudent(studentId: string, subjId: string) {
-    const students = this._students.value.map(st => {
-      if (st.id === studentId && !st.assignedSubjects.includes(subjId)) {
-        return { ...st, assignedSubjects: [...st.assignedSubjects, subjId] };
-      }
-      return st;
-    });
-    this._students.next(students);
-  }
-
-  // --- ربط المادة بالمدرس في جدول المواد (عشان تلاقيها لما تختار المدرس) ---
-  syncSubjectInstructors() {
-    const instructors = this._instructors.value;
-    let subjects = this._subjects.value.map(s => ({
-      ...s,
-      instructorIds: instructors.filter(i => i.subjects?.includes(s.id)).map(i => i.id)
-    }));
-    this._subjects.next(subjects);
+    this.http.post(`${this.apiUrl}/Attendees/${studentId}/subjects/${subjId}`, {}, this.getAuthHeaders()).subscribe();
   }
 
   // === Helpers ===
   getInstructorName(id: string): string {
-    return this._instructors.value.find(i => i.id === id)?.name || '';
+    // Implementation needed
+    return '';
   }
   getSubjectName(id: string): string {
-    return this._subjects.value.find(s => s.id === id)?.name || '';
+    // Implementation needed
+    return '';
   }
   private randomId(prefix = '') {
     return prefix + Math.random().toString(36).substr(2, 10);

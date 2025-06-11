@@ -1,0 +1,20 @@
+<app-navbar-instructor />
+
+<h2 class="page-title">Your Subjects</h2>
+<div class="courses-grid">
+  <mat-card *ngFor="let subject of subjects" class="subject-card">
+    <mat-card-header>
+      <mat-card-title>{{ subject.name }}</mat-card-title>
+      <mat-card-subtitle>{{ subject.schedule }}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p>Instructor: {{ subject.instructor }}</p>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-raised-button color="accent" (click)="openSubject(subject)">
+        <mat-icon>login</mat-icon>
+        Take Attendance
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

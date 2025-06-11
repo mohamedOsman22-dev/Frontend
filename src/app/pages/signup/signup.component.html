@@ -1,40 +1,72 @@
-<div class="login-root">
-  <div class="login-box">
-    <h2 class="login-title">Create Account</h2>
+<div class="signup-container">
+  <div class="signup-card">
+    <h2 class="signup-title">Create Account</h2>
+    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" formControlName="name" placeholder="Enter your full name">
+        <div class="error-message" *ngIf="signupForm.get('name')?.errors?.['required'] && signupForm.get('name')?.touched">
+          Name is required
+        </div>
+      </div>
 
-    <form (ngSubmit)="signup()" #signupForm="ngForm" class="login-form">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" formControlName="email" placeholder="Enter your email">
+        <div class="error-message" *ngIf="signupForm.get('email')?.errors?.['required'] && signupForm.get('email')?.touched">
+          Email is required
+        </div>
+        <div class="error-message" *ngIf="signupForm.get('email')?.errors?.['email'] && signupForm.get('email')?.touched">
+          Please enter a valid email
+        </div>
+      </div>
 
-      <!-- Name Input -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Name</mat-label>
-        <input matInput type="text" name="name" [(ngModel)]="name" required />
-      </mat-form-field>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" formControlName="password" placeholder="Enter your password">
+        <div class="error-message" *ngIf="signupForm.get('password')?.errors?.['required'] && signupForm.get('password')?.touched">
+          Password is required
+        </div>
+        <div class="error-message" *ngIf="signupForm.get('password')?.errors?.['minlength'] && signupForm.get('password')?.touched">
+          Password must be at least 6 characters
+        </div>
+      </div>
 
-      <!-- Email Input -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Email</mat-label>
-        <input matInput type="email" name="email" [(ngModel)]="email" required email />
-      </mat-form-field>
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" formControlName="confirmPassword" placeholder="Confirm your password">
+        <div class="error-message" *ngIf="signupForm.get('confirmPassword')?.errors?.['required'] && signupForm.get('confirmPassword')?.touched">
+          Confirm Password is required
+        </div>
+        <div class="error-message" *ngIf="signupForm.errors?.['mismatch'] && signupForm.get('confirmPassword')?.touched">
+          Passwords do not match
+        </div>
+      </div>
 
-      <!-- Password Input -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Password</mat-label>
-        <input matInput type="password" name="password" [(ngModel)]="password" required minlength="6" />
-      </mat-form-field>
+      <div class="form-group">
+        <label for="userType">I am a</label>
+        <select id="userType" formControlName="userType">
+          <option value="">Select user type</option>
+          <option value="student">Student</option>
+          <option value="instructor">Instructor</option>
+          <option value="admin">Admin</option>
+        </select>
+        <div class="error-message" *ngIf="signupForm.get('userType')?.errors?.['required'] && signupForm.get('userType')?.touched">
+          Please select a user type
+        </div>
+      </div>
 
-      <!-- Confirm Password Input -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Confirm Password</mat-label>
-        <input matInput type="password" name="confirmPassword" [(ngModel)]="confirmPassword" required minlength="6" />
-      </mat-form-field>
+      <div class="error-message" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
 
-      <button mat-raised-button color="primary" [disabled]="!signupForm.form.valid" class="login-btn">
-        Sign Up
+      <button type="submit" [disabled]="signupForm.invalid || isLoading">
+        {{ isLoading ? 'Creating Account...' : 'Sign Up' }}
       </button>
 
-      <p class="signup-text">Already have an account?
-        <a routerLink="/login">Login</a>
-      </p>
+      <div class="login-link">
+        Already have an account? <a routerLink="/login">Log in</a>
+      </div>
     </form>
   </div>
 </div>

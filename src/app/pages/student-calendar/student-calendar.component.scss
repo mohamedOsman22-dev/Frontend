@@ -1,17 +1,30 @@
-.calendar-page {
-  padding: 40px 0;
-  h2 {
-    color: #8e53ff;
-    text-align: center;
-    margin-bottom: 25px;
-  }
-  .day-details-card {
-    animation: fadeIn .35s;
-    text-align: center;
-  }
+.calendar-wrapper {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 28px #b993f73b;
+  padding: 34px 30px 32px 30px;
+  max-width: 730px;
+  width: 100%;
+  margin: 38px auto;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(35px);}
-  to { opacity: 1; transform: none;}
+.calendar-title {
+  color: #7352a7;
+  font-size: 2em;
+  margin-bottom: 20px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.calendar-details {
+  background: #f4eeff;
+  border-radius: 15px;
+  box-shadow: 0 2px 18px #b993f73b;
+  margin-top: 36px;
+  padding: 24px 35px;
+  font-size: 1.18em;
+  color: #5334a7;
+  max-width: 530px;
+  margin-left: auto;
+  margin-right: auto;
 }

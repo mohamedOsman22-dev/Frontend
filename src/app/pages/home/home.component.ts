@@ -1,38 +1,31 @@
 import { Component } from '@angular/core';
-import { NgIf, NgFor } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { Router } from '@angular/router';
-import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-home',
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss'],
   standalone: true,
-  imports: [NgIf, NgFor, MatButtonModule, MatIconModule],
-  animations: [
-    trigger('pageFade', [
-      transition(':leave', [
-        animate('400ms cubic-bezier(.77,0,.18,1)', style({ opacity: 0, transform: 'translateY(-60px) scale(0.96)' }))
-      ]),
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(60px) scale(0.96)' }),
-        animate('400ms cubic-bezier(.77,0,.18,1)', style({ opacity: 1, transform: 'translateY(0) scale(1)' }))
-      ])
-    ])
-  ]
+  imports: [CommonModule, RouterModule, MatButtonModule],
+  template: `
+    <div class="home-container">
+      <h1>Welcome to Attendance System</h1>
+      <button mat-raised-button color="primary" routerLink="/login">Get Started</button>
+    </div>
+  `,
+  styles: [`
+    .home-container {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+    h1 {
+      margin-bottom: 2rem;
+      color: #333;
+    }
+  `]
 })
-export class HomeComponent {
-  bubbles = Array(6);
-  isLeaving = false;
-
-  constructor(private router: Router) {}
-
-  goToLogin() {
-    this.isLeaving = true;
-    setTimeout(() => {
-      this.router.navigate(['/login']);
-    }, 390);
-  }
-}
+export class HomeComponent {}

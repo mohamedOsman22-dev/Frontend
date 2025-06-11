@@ -1,48 +1,55 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CalendarEvent, CalendarView, CalendarMonthViewDay, CalendarModule } from 'angular-calendar';
+import { MatCardModule } from '@angular/material/card';
+import { MatTableModule } from '@angular/material/table';
 
 @Component({
   selector: 'app-student-calendar',
   standalone: true,
-  imports: [
-    CommonModule,
-    CalendarModule // فقط هنا!!
-  ],
-  templateUrl: './student-calendar.component.html',
-  styleUrls: ['./student-calendar.component.scss'],
-})
-export class StudentCalendarComponent {
-  view: CalendarView = CalendarView.Month;
-  viewDate: Date = new Date();
-  attendance: CalendarEvent[] = [
-    { start: new Date(2025, 5, 1), title: 'Present', color: { primary: '#32d282', secondary: '#e3fceb' } },
-    { start: new Date(2025, 5, 2), title: 'Absent', color: { primary: '#ff4d4d', secondary: '#fbe8e6' } },
-    { start: new Date(2025, 5, 3), title: 'Lecture', color: { primary: '#b993f7', secondary: '#e3e3fa' } },
-  ];
-  CalendarView = CalendarView;
-
-  selectedDay: Date | null = null;
-  selectedDayTitle: string = '';
-  selectedDayContent: string = '';
-
-  dayClicked(day: CalendarMonthViewDay<CalendarEvent>) {
-    this.selectedDay = day.date;
-    if (day.events.length > 0) {
-      const event = day.events[0];
-      if (event.title === 'Present') {
-        this.selectedDayTitle = 'Attendance';
-        this.selectedDayContent = 'You were present this day ✅';
-      } else if (event.title === 'Absent') {
-        this.selectedDayTitle = 'Attendance';
-        this.selectedDayContent = 'You were absent this day ❌';
-      } else {
-        this.selectedDayTitle = 'Lecture';
-        this.selectedDayContent = 'You have a lecture on this day 📚';
-      }
-    } else {
-      this.selectedDayTitle = 'No Events';
-      this.selectedDayContent = 'No lectures or attendance required for this day.';
+  imports: [CommonModule, MatCardModule, MatTableModule],
+  template: `
+    <div class="calendar-container">
+      <h1>Student Calendar</h1>
+      
+      <mat-card>
+        <mat-card-content>
+          <table mat-table [dataSource]="schedule">
+            <ng-container matColumnDef="course">
+              <th mat-header-cell *matHeaderCellDef>Course</th>
+              <td mat-cell *matCellDef="let item">{{item.course}}</td>
+            </ng-container>
+            <ng-container matColumnDef="time">
+              <th mat-header-cell *matHeaderCellDef>Time</th>
+              <td mat-cell *matCellDef="let item">{{item.time}}</td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let item">{{item.status}}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="['course', 'time', 'status']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['course', 'time', 'status'];"></tr>
+          </table>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  `,
+  styles: [`
+    .calendar-container {
+      padding: 2rem;
     }
+    table {
+      width: 100%;
+    }
+  `]
+})
+export class StudentCalendarComponent implements OnInit {
+  schedule = [
+    { course: 'Course 1', time: '9:00 AM', status: 'Present' },
+    { course: 'Course 2', time: '11:00 AM', status: 'Absent' },
+    { course: 'Course 3', time: '2:00 PM', status: 'Present' }
+  ];
+
+  ngOnInit() {
+    // Load schedule data from service
   }
 }

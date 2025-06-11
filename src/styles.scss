@@ -46,4 +46,15 @@
   from { opacity: 0; transform: scale(0.95);}
   to   { opacity: 1; transform: scale(1);}
 }
-.animate-pop { animation: pop-in .6s cubic-bezier(.44,1.7,.5,1) both; }
+body.dark-theme input,
+body.dark-theme .mat-form-field-infix {
+  background: #24223b !important; // أو أي لون أغمق يبان على الخلفية الداكنة
+  color: #fff !important;
+}
+body.dark-theme .mat-input-element {
+  color: #fff !important;
+}
+body.dark-theme .mat-form-field-label {
+  color: #b9b5e9 !important;
+}
+

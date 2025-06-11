@@ -71,23 +71,19 @@ export class SubjectsComponent implements OnInit {
   saveSubject() {
     if (this.editMode && this.selectedSubject) {
       this.editSubject.id = this.selectedSubject.id;
-      // تحديث المادة في القائمة (يفضل استخدام dataService.editSubject)
-      Object.assign(this.selectedSubject, this.editSubject);
+      this.dataService.editSubject({ ...this.editSubject });
     } else if (!this.editMode) {
-      this.editSubject.id = Math.random().toString(36).substr(2, 8);
-      this.subjects.push({ ...this.editSubject });
+      this.dataService.addSubject({ ...this.editSubject });
       this.selectedSubject = { ...this.editSubject };
     }
     this.showDialog = false;
   }
 
   deleteSubject(subj: Subject) {
-    const idx = this.subjects.indexOf(subj);
-    if (idx > -1) {
-      this.subjects.splice(idx, 1);
-      if (this.selectedSubject?.id === subj.id) {
-        this.selectedSubject = this.subjects[0] || null;
-      }
+    if (!subj.id) return;
+    this.dataService.deleteSubject(subj.id);
+    if (this.selectedSubject?.id === subj.id) {
+      this.selectedSubject = this.subjects[0] || null;
     }
   }
 

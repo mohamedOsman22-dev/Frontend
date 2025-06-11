@@ -1,93 +1,97 @@
-import { Component, AfterViewInit, HostListener, Renderer2, ElementRef } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, NgForm } from '@angular/forms';
+import { FormsModule, FormGroup, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { MatRadioModule } from '@angular/material/radio';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { RouterModule, Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
+import { Router, RouterModule } from '@angular/router';
+import { LoginService } from '../../../app/services/login.service';
+
+interface LoginResponse {
+  token: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    userType: string;
+  };
+}
 
 @Component({
   selector: 'app-login',
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatIconModule,
+    MatRadioModule,
     MatProgressSpinnerModule,
-    RouterModule,
-  ],
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss'],
+    RouterModule
+  ]
 })
-export class LoginComponent implements AfterViewInit {
-  email = '';
-  password = '';
+export class LoginComponent {
+  loginForm: FormGroup;
   loading = false;
-  showPassword = false;
-
   errorMsg = '';
   successMsg = '';
 
-  // Role logic (للبانر بعد الدخول فقط)
-  userRole: 'student' | 'instructor' | null = null;
-
   constructor(
-    private renderer: Renderer2,
-    private el: ElementRef,
-    private router: Router,
-    private auth: AuthService
-  ) {}
-
-  login(form?: NgForm) {
-    this.loading = true;
-    this.errorMsg = '';
-    this.successMsg = '';
-    setTimeout(() => {
-      if (this.email.endsWith('@student.com') && this.password === 'student123') {
-        this.auth.setRole('student');
-        this.userRole = 'student';
-        this.router.navigate(['/student-calendar']);
-        return;
-      } else if (this.email.endsWith('@instructor.com') && this.password === 'instructor123') {
-        this.auth.setRole('instructor');
-        this.userRole = 'instructor';
-        this.router.navigate(['/dashboard']);
-      } else {
-        this.auth.setRole('guest');
-        this.errorMsg = 'Email or password is incorrect!';
-      }
-      this.loading = false;
-    }, 1300);
-  }
-
-  @HostListener('window:scroll', [])
-  onScroll() {
-    const elements = this.el.nativeElement.querySelectorAll('.fade-up-on-scroll');
-    elements.forEach((el: HTMLElement) => {
-      const rect = el.getBoundingClientRect();
-      if (rect.top < window.innerHeight - 50) {
-        this.renderer.addClass(el, 'revealed');
-      }
+    private fb: FormBuilder,
+    private loginService: LoginService,
+    private router: Router
+  ) {
+    this.loginForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', Validators.required]
     });
   }
 
-  ngAfterViewInit() {
-    setTimeout(() => {
-      const elements = this.el.nativeElement.querySelectorAll('.fade-up-on-scroll');
-      elements.forEach((el: HTMLElement) => {
-        this.renderer.addClass(el, 'revealed');
-      });
-    }, 500);
+  // دالة لفك تشفير JWT Token
+  decodeToken(token: string): any {
+    try {
+      const payload = token.split('.')[1];
+      return JSON.parse(atob(payload));
+    } catch (e) {
+      return null;
+    }
   }
 
-  logout() {
-    this.auth.setRole('guest');
-    this.router.navigate(['/login']);
+  login(): void {
+    if (this.loginForm.invalid) {
+      return;
+    }
+
+    this.loading = true;
+    this.errorMsg = '';
+    this.successMsg = '';
+
+    const { email, password } = this.loginForm.value;
+
+    this.loginService.login(email, password).subscribe({
+      next: (response: any) => {
+        this.loading = false;
+        this.successMsg = 'Login successful! Redirecting...';
+        localStorage.setItem('token', response.token);
+
+        // استخرج الدور من التوكن
+        const decoded = this.decodeToken(response.token);
+        if (decoded && decoded.role && decoded.role.toLowerCase() === 'admin') {
+          this.router.navigate(['/dashboard']);
+        } else {
+          // يمكنك هنا توجيه المستخدم لصفحة أخرى أو عدم التوجيه
+        }
+      },
+      error: (error: string) => {
+        this.loading = false;
+        this.errorMsg = error;
+      }
+    });
   }
 }

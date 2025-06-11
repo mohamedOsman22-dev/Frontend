@@ -81,7 +81,6 @@ export class InstructorsComponent implements OnInit {
       this.editInstructor.id = this.selectedInstructor.id;
       this.dataService.editInstructor({ ...this.editInstructor });
     } else if (!this.editMode) {
-      this.editInstructor.id = Math.random().toString(36).substr(2, 8);
       this.dataService.addInstructor({ ...this.editInstructor });
       this.selectedInstructor = { ...this.editInstructor };
     }

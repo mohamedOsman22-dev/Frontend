@@ -1,50 +1,45 @@
 import { Routes } from '@angular/router';
+import { RoleGuard } from './guards/role.guard';
 
 export const routes: Routes = [
+  { path: '', loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent) },
+  { path: 'login', loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent) },
+  { path: 'signup', loadComponent: () => import('./pages/signup/signup.component').then(m => m.SignupComponent) },
+
   {
-    path: '',
-    loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent)
+    path: 'student-calendar',
+    loadComponent: () => import('./pages/student-calendar/student-calendar.component')
+      .then(m => m.StudentCalendarComponent),
+    canActivate: [RoleGuard],
+    data: { roles: ['student'] }
   },
   {
-    path: 'login',
-    loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent)
-  },
-  {
-    path: 'signup',
-    loadComponent: () => import('./pages/signup/signup.component').then(m => m.SignupComponent)
+    path: 'take-attendance',
+    loadComponent: () => import('./pages/face-attend/face-attend.component')
+      .then(m => m.FaceAttendComponent),
+    canActivate: [RoleGuard],
+    data: { roles: ['instructor'] }
   },
   {
     path: 'dashboard',
-    loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+    loadComponent: () => import('./pages/dashboard/dashboard.component')
+      .then(m => m.DashboardComponent),
+    canActivate: [RoleGuard],
+    data: { roles: ['admin'] }
   },
   {
-    path: 'student-calendar',
-    loadComponent: () => import('./pages/student-calendar/student-calendar.component').then(m => m.StudentCalendarComponent)
+    path: 'instructor-subject/:id',
+    loadComponent: () => import('./pages/face-attend/face-attend.component')
+      .then(m => m.FaceAttendComponent),
+    canActivate: [RoleGuard],
+    data: { roles: ['instructor'] }
   },
   {
-    path: 'manage-account',
-    loadComponent: () => import('./pages/manage-account/manage-account.component').then(m => m.ManageAccountComponent)
+    path: 'courses',
+    loadComponent: () => import('./pages/instructor/instructor-courses.component')
+      .then(m => m.InstructorCoursesComponent),
+    canActivate: [RoleGuard],
+    data: { roles: ['instructor'] }
   },
-  {
-    path: 'users',
-    loadComponent: () => import('./pages/users/users.component').then(m => m.UsersComponent)
-  },
-  {
-    path: 'face-attend',
-    loadComponent: () => import('./pages/face-attend/face-attend.component').then(m => m.FaceAttendComponent)
-  },
-  {
-    path: 'manage-attend',
-    loadComponent: () => import('./pages/manage-attend/manage-attend.component').then(m => m.ManageAttendComponent)
-  },
-  {
-    path: 'reports',
-    loadComponent: () => import('./pages/reports/reports.component').then(m => m.ReportsComponent)
-  },
-  {
-    path: 'settings',
-    loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent)
-  },
-  // آخر مسار لأي رابط غلط (صفحة Not Found لو حبيت تضيفها)
-  // { path: '**', loadComponent: () => import('./pages/not-found/not-found.component').then(m => m.NotFoundComponent) },
+  { path: '**', redirectTo: '' }
 ];

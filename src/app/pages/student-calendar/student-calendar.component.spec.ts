@@ -1,23 +1,23 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+  import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { StudentCalendarComponent } from './student-calendar.component';
+  import { StudentCalendarComponent } from './student-calendar.component';
 
-describe('StudentCalendarComponent', () => {
-  let component: StudentCalendarComponent;
-  let fixture: ComponentFixture<StudentCalendarComponent>;
+  describe('StudentCalendarComponent', () => {
+    let component: StudentCalendarComponent;
+    let fixture: ComponentFixture<StudentCalendarComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [StudentCalendarComponent]
-    })
-    .compileComponents();
+    beforeEach(async () => {
+      await TestBed.configureTestingModule({
+        imports: [StudentCalendarComponent]
+      })
+      .compileComponents();
 
-    fixture = TestBed.createComponent(StudentCalendarComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+      fixture = TestBed.createComponent(StudentCalendarComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+    });
+
+    it('should create', () => {
+      expect(component).toBeTruthy();
+    });
   });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-});
