@@ -26,4 +26,10 @@ export class AttendanceService {
   getAttendanceByStudent(studentId: string): Observable<any> {
     return this.http.get(`${environment.apiUrl}/api/Attendance/student/${studentId}`);
   }
+  submitAttendance(subjectId: string, attendanceList: any[]): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/Attendance/Submit`, {
+      subjectId,
+      students: attendanceList
+    });
+  }
 }

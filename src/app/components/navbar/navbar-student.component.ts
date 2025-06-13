@@ -30,3 +30,4 @@ export class NavbarStudentComponent {
     setTimeout(() => window.location.reload(), 200);
   }
 }
+ 

@@ -5,8 +5,8 @@ import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-manage-account',
   standalone: true,
-  templateUrl: './manage-account.component.html',
-  styleUrls: ['./manage-account.component.scss'],
+  templateUrl: './manage-attend.component.html',
+  styleUrls: ['./manage-attend.component.scss'],
   imports: [CommonModule, FormsModule]
 })
 export class ManageAccountComponent {

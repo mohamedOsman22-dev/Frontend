@@ -7,6 +7,9 @@ import { HomeComponent } from './pages/home/home.component';
 import { AdminDashboardComponent } from './pages/admin-dashboard/admin-dashboard.component';
 import { StudentCalendarComponent } from './pages/student-calendar/student-calendar.component';
 import { InstructorDashboardComponent } from './pages/instructor-dashboard/instructor-dashboard.component';
+import { InstructorCoursesComponent } from './pages/instructor-courses/instructor-courses.component';
+import { InstructorSubjectsComponent } from './pages/instructor-subjects/instructor-subjects.component';
+import { SubjectDetailsComponent } from './pages/subject-details/subject-details.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -15,7 +18,10 @@ export const routes: Routes = [
   { path: 'face-attend', component: FaceAttendComponent },
   { path: 'admin-dashboard', component: AdminDashboardComponent },
   { path: 'student-calendar', component: StudentCalendarComponent },
-  { path: 'instructor-dashboard', component: InstructorDashboardComponent }
+  { path: 'instructor-dashboard', component: InstructorDashboardComponent },
+  { path: 'instructor/courses', component: InstructorCoursesComponent },
+  { path: 'subjects', component: InstructorSubjectsComponent },
+  { path: 'subjects/:subjectId', component: SubjectDetailsComponent }
 ];
 
 @NgModule({

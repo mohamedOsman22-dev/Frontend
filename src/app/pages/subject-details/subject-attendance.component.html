@@ -1,0 +1,23 @@
+<div class="attendance-camera">
+  <h4>Take Attendance by Camera</h4>
+  <button mat-raised-button color="primary" (click)="startCamera()">
+    <mat-icon>camera_alt</mat-icon>
+    بدء الحضور بالكاميرا
+  </button>
+  <div *ngIf="cameraActive">
+    <p>الكاميرا تعمل (mock)...</p>
+    <!-- لاحقًا: عرض الفيديو والتعرف على الوجوه -->
+  </div>
+  <hr>
+  <h4>Manual Attendance</h4>
+  <input [(ngModel)]="manualName" placeholder="Student Name">
+  <input [(ngModel)]="manualId" placeholder="Student ID">
+  <button (click)="addManualAttendance()">Add Manually</button>
+  <h4>Attendance List</h4>
+  <ul>
+    <li *ngFor="let student of attendanceList; let i = index">
+      {{ student.name }} ({{ student.id }})
+      <button (click)="removeFromAttendance(i)">Remove</button>
+    </li>
+  </ul>
+</div> 

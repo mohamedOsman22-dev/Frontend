@@ -1,0 +1,40 @@
+<div class="subject-panel">
+  <h2>{{ subject?.name }}</h2>
+  <p>{{ subject?.description }}</p>
+  <h3>Students</h3>
+  <ul>
+    <li *ngFor="let student of students">{{ student.name }} ({{ student.id }})</li>
+  </ul>
+
+  <h3>Take Attendance</h3>
+  <!-- كاميرا أو إدخال يدوي -->
+  <div>
+    <!-- زر فتح الكاميرا (يمكنك استخدام مكتبة ngx-webcam أو أي مكتبة أخرى) -->
+    <button>Open Camera</button>
+    <div>
+      <input [(ngModel)]="manualName" placeholder="Student Name">
+      <input [(ngModel)]="manualId" placeholder="Student ID">
+      <button (click)="addManualAttendance()">Add Manually</button>
+    </div>
+  </div>
+
+  <h3>Attendance List</h3>
+  <ul>
+    <li *ngFor="let student of attendanceList; let i = index">
+      {{ student.name }} ({{ student.id }})
+      <button (click)="removeFromAttendance(i)">Remove</button>
+    </li>
+  </ul>
+
+  <button (click)="submitAttendance()">Submit Attendance</button>
+  <button (click)="downloadPDF()">Download PDF Report</button>
+</div>
+
+<div class="instructor-subjects-list">
+  <h2>Subjects You Teach</h2>
+  <ul>
+    <li *ngFor="let subj of subjects">
+      <a [routerLink]="['/subjects', subj.id]">{{ subj.name }}</a>
+    </li>
+  </ul>
+</div>

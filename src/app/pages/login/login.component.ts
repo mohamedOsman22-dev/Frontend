@@ -8,6 +8,8 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterModule } from '@angular/router';
 import { LoginService } from '../../../app/services/login.service';
+import { jwtDecode } from 'jwt-decode';
+import { MatIconModule } from '@angular/material/icon';
 
 interface LoginResponse {
   token: string;
@@ -33,7 +35,8 @@ interface LoginResponse {
     MatButtonModule,
     MatRadioModule,
     MatProgressSpinnerModule,
-    RouterModule
+    RouterModule,
+    MatIconModule
   ]
 })
 export class LoginComponent {
@@ -41,6 +44,12 @@ export class LoginComponent {
   loading = false;
   errorMsg = '';
   successMsg = '';
+  hidePassword = true;
+  bubbles = Array(6);
+  showAnimatedMsg = false;
+  loginSuccess = false;
+  email = '';
+  password = '';
 
   constructor(
     private fb: FormBuilder,
@@ -49,7 +58,10 @@ export class LoginComponent {
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+      password: ['', [
+        Validators.required,
+        Validators.pattern(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/)
+      ]]
     });
   }
 
@@ -64,34 +76,83 @@ export class LoginComponent {
   }
 
   login(): void {
+    alert('login called');
     if (this.loginForm.invalid) {
       return;
     }
-
     this.loading = true;
     this.errorMsg = '';
     this.successMsg = '';
-
+    this.showAnimatedMsg = false;
     const { email, password } = this.loginForm.value;
-
     this.loginService.login(email, password).subscribe({
       next: (response: any) => {
         this.loading = false;
-        this.successMsg = 'Login successful! Redirecting...';
+        this.loginSuccess = true;
+        this.showAnimatedMsg = true;
         localStorage.setItem('token', response.token);
-
-        // استخرج الدور من التوكن
-        const decoded = this.decodeToken(response.token);
-        if (decoded && decoded.role && decoded.role.toLowerCase() === 'admin') {
-          this.router.navigate(['/dashboard']);
-        } else {
-          // يمكنك هنا توجيه المستخدم لصفحة أخرى أو عدم التوجيه
+        setTimeout(() => { this.showAnimatedMsg = false; }, 2500);
+        let decoded: any;
+        try {
+          decoded = jwtDecode(response.token);
+        } catch (e) {
+          this.errorMsg = 'خطأ في التوكن.';
+          this.loginSuccess = false;
+          return;
         }
+        console.log('Decoded token:', decoded);
+        const role = (decoded.role || decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decoded.userType || decoded.user_type || '').toLowerCase();
+        console.log('Extracted role:', role);
+        if (role === 'instructor') {
+          localStorage.setItem('instructorId', decoded.id || decoded.instructorId || decoded.sub || decoded.userId || '');
+        } else if (role === 'admin') {
+          localStorage.setItem('instructorId', decoded.id || decoded.instructorId || decoded.sub || decoded.userId || '');
+        } else if (role === 'attendee') {
+          localStorage.setItem('instructorId', decoded.id || decoded.instructorId || decoded.sub || decoded.userId || '');
+        }
+        setTimeout(() => {
+          if (role === 'admin') {
+            this.router.navigate(['/dashboard']);
+          } else if (role === 'student' || role === 'attendee') {
+            this.router.navigate(['/student-calendar']);
+          } else if (role === 'instructor') {
+            this.router.navigate(['/subjects']);
+          } else {
+            this.errorMsg = `لم يتم التعرف على نوع المستخدم أو ليس لديك صلاحية الدخول هنا. الدور المستخرج: [${role}]`;
+            this.loginSuccess = false;
+            this.showAnimatedMsg = true;
+            setTimeout(() => { this.showAnimatedMsg = false; }, 3500);
+            console.error('Unknown or unauthorized user role:', role, decoded);
+          }
+        }, 1200);
       },
       error: (error: string) => {
         this.loading = false;
-        this.errorMsg = error;
+        this.loginSuccess = false;
+        this.showAnimatedMsg = true;
+        setTimeout(() => { this.showAnimatedMsg = false; }, 2500);
       }
+    });
+  }
+
+  togglePasswordVisibility() {
+    this.hidePassword = !this.hidePassword;
+  }
+
+  onLogin() {
+    this.loginService.login(this.email, this.password).subscribe(result => {
+      if (result.userType === 'instructor') {
+        this.router.navigate(['/instructor-subject']);
+      } else if (result.userType === 'attendee') {
+        this.router.navigate(['/calendar']);
+      } else if (result.userType === 'admin') {
+        this.router.navigate(['/dashboard']);
+      } else {
+        // معالجة حالة غير معروفة
+        alert('نوع مستخدم غير معروف');
+      }
+    }, error => {
+      alert('خطأ في تسجيل الدخول');
     });
   }
 }

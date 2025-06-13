@@ -14,13 +14,13 @@ export interface LoginResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private _role = new BehaviorSubject<'student' | 'instructor' | 'admin' | 'guest'>('guest');
+  private _role = new BehaviorSubject<'Attendee' | 'Instructor' | 'Admin' | 'guest'>('guest');
   role$ = this._role.asObservable();
   private API_URL = environment.apiUrl;
 
   constructor(private http: HttpClient) {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
-    if (user && user.userType) this._role.next(user.userType);
+    if (user && user.userType) this._role.next(user.userType as 'Attendee' | 'Instructor' | 'Admin');
   }
 
   login(email: string, password: string): Observable<LoginResponse | { error: string }> {
@@ -29,7 +29,7 @@ export class AuthService {
         if (res && res.token && (res.userType || res.user?.role)) {
           localStorage.setItem('token', res.token);
           localStorage.setItem('user', JSON.stringify(res));
-          const role = (res.userType || res.user?.role) as 'student' | 'instructor' | 'admin' | 'guest';
+          const role = (res.userType || res.user?.role) as 'Attendee' | 'Instructor' | 'Admin' | 'guest';
           this._role.next(role);
         }
       }),
@@ -56,4 +56,10 @@ export class AuthService {
   get user() {
     return JSON.parse(localStorage.getItem('user') || '{}');
   }
+
+  getCurrentUserId(): string {
+    const user = this.user;
+    return user && user.id ? user.id : '';
+  }
 }
+

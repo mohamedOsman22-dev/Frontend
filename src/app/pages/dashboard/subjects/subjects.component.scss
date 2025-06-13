@@ -98,6 +98,26 @@
     cursor: pointer;
   }
   .add-btn:hover { filter: brightness(1.06);}
+
+  .delete-all-btn {
+    width: 100%;
+    margin-top: 8px;
+    background: linear-gradient(90deg, #fc4a6a, #ff7b7b 90%);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 15px 0;
+    font-size: 1.11rem;
+    font-weight: bold;
+    box-shadow: 0 2px 12px #fc4a6a33;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    transition: background 0.2s, filter 0.2s;
+    cursor: pointer;
+  }
+  .delete-all-btn:hover { filter: brightness(1.08); background: linear-gradient(90deg, #ff7b7b, #fc4a6a 90%);}
 }
 
 .subject-details {

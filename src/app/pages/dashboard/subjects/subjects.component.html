@@ -22,6 +22,10 @@
       <mat-icon>add</mat-icon>
       Add Subject
     </button>
+    <button class="delete-all-btn" (click)="deleteAllSubjects()">
+      <mat-icon>delete</mat-icon>
+      Delete All Subjects
+    </button>
   </div>
 
   <!-- Right: Subject Details -->
@@ -47,9 +51,9 @@
           <div
             class="schedule-row"
             *ngFor="let date of selectedSubject.dates; let i = index">
-            <span class="day">{{date.day}}</span>
-            <span class="from">{{date.from}}</span>
-            <span class="to">{{date.to}}</span>
+            <span class="day">{{ getDayName(date.dayOfWeek ?? date.day) }}</span>
+            <span class="from">{{date.startTime ?? date.from}}</span>
+            <span class="to">{{date.endTime ?? date.to}}</span>
             <button class="edit-ic small" (click)="openEditDateDialog(selectedSubject, i)">
               <mat-icon>edit</mat-icon>
             </button>

@@ -1,0 +1,31 @@
+<div class="attendance-review">
+  <h4>Review & Edit Attendance</h4>
+  <p>سيتم عرض قائمة الطلاب الذين تم التعرف عليهم هنا مع إمكانية التعديل قبل الإرسال.</p>
+  <button mat-raised-button color="primary" disabled>
+    <mat-icon>save</mat-icon>
+    إرسال الحضور
+  </button>
+  <button mat-raised-button color="accent" disabled style="margin-right: 1rem;">
+    <mat-icon>picture_as_pdf</mat-icon>
+    تنزيل التقرير PDF
+  </button>
+  <!-- لاحقًا: جدول الطلاب مع إمكانية التعديل -->
+  <ul>
+    <li *ngFor="let student of attendanceList; let i = index">
+      <span *ngIf="editIndex !== i">{{ student.name }} ({{ student.id }})
+        <button (click)="startEdit(i)">Edit</button>
+        <button (click)="remove(i)">Remove</button>
+      </span>
+      <span *ngIf="editIndex === i">
+        <input [(ngModel)]="editName" placeholder="Name">
+        <input [(ngModel)]="editId" placeholder="ID">
+        <button (click)="saveEdit()">Save</button>
+      </span>
+    </li>
+  </ul>
+  <button (click)="submitAttendance()" [disabled]="submitted">Submit Attendance</button>
+  <div *ngIf="submitted">
+    <button (click)="downloadPDF()">Download PDF</button>
+    <button (click)="downloadCSV()">Download CSV</button>
+  </div>
+</div> 

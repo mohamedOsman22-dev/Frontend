@@ -1,18 +1,24 @@
-<app-navbar-student />
-<div class="calendar-page">
-  <h2 class="calendar-title">My Attendance Calendar</h2>
-  <full-calendar [options]="calendarOptions"></full-calendar>
-
-  <div class="calendar-details" *ngIf="selectedEvent">
-    <ng-container *ngIf="selectedEvent.title !== 'No Lecture'; else emptyDay">
-      <h3>{{selectedEvent.title}}</h3>
-      <p><b>Date:</b> {{selectedEvent.date | date:'fullDate'}}</p>
-      <p><b>Time:</b> {{selectedEvent.extendedProps.time}}</p>
-      <p><b>Details:</b> {{selectedEvent.extendedProps.details}}</p>
-    </ng-container>
-    <ng-template #emptyDay>
-      <h3>No Lectures</h3>
-      <p>Date: {{selectedEvent.date | date:'fullDate'}}</p>
-    </ng-template>
+<app-navbar-student></app-navbar-student>
+<div class="calendar-bg">
+  <div class="calendar-wrapper">
+    <h2 class="calendar-title">My Subjects Calendar</h2>
+    <full-calendar
+      [plugins]="calendarPlugins"
+      [initialView]="'dayGridMonth'"
+      [events]="calendarEvents"
+      [headerToolbar]="{
+        left: 'prev today next',
+        center: 'title',
+        right: 'dayGridMonth'
+      }"
+      (eventClick)="handleEventClick($event)">
+    </full-calendar>
+    <div *ngIf="selectedEvent" class="event-details-modal">
+      <h3>{{ selectedEvent.title }}</h3>
+      <p><b>Date:</b> {{ selectedEvent.start | date:'fullDate' }}</p>
+      <p><b>Time:</b> {{ selectedEvent.start | date:'shortTime' }}</p>
+      <p><b>Room:</b> {{ selectedEvent.extendedProps?.room }}</p>
+      <p><b>Details:</b> {{ selectedEvent.extendedProps?.details }}</p>
+    </div>
   </div>
 </div>

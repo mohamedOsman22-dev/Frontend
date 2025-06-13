@@ -27,21 +27,21 @@ export class NavbarComponent implements OnInit {
   }
 
   setNavLinks() {
-    if (this.role === 'student') {
+    if (this.role === 'Attendee') {
       this.navLinks = [
         { label: 'Home', route: '/home' },
         { label: 'Calendar', route: '/student-calendar' },
         { label: 'Manage Account', route: '/manage-account' },
         { label: 'Logout', route: '/login', logout: true }
       ];
-    } else if (this.role === 'instructor') {
+    } else if (this.role === 'Instructor') {
       this.navLinks = [
         { label: 'Home', route: '/home' },
         { label: 'Take Attendance', route: '/face-attend' },
         { label: 'Manage Account', route: '/manage-account' },
         { label: 'Logout', route: '/login', logout: true }
       ];
-    } else if (this.role === 'admin') {
+    } else if (this.role === 'Admin') {
       this.navLinks = [
         { label: 'Home', route: '/home' },
         { label: 'Dashboard', route: '/dashboard' },

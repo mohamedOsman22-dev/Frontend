@@ -1,72 +1,76 @@
-<div class="signup-container">
-  <div class="signup-card">
-    <h2 class="signup-title">Create Account</h2>
-    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
-      <div class="form-group">
-        <label for="name">Full Name</label>
-        <input type="text" id="name" formControlName="name" placeholder="Enter your full name">
-        <div class="error-message" *ngIf="signupForm.get('name')?.errors?.['required'] && signupForm.get('name')?.touched">
-          Name is required
-        </div>
-      </div>
+<div class="signup-hero">
+  <div class="signup-glass">
+    <div class="signup-content">
+      <h1 class="signup-title">
+        Create Account <mat-icon class="signup-icon">person_add</mat-icon>
+      </h1>
+      
+      <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="signup-form">
+        <mat-form-field appearance="outline" class="animate-field">
+          <mat-label>Full Name</mat-label>
+          <input matInput formControlName="name" required autocomplete="name" placeholder="Enter your full name">
+          <mat-error *ngIf="signupForm.get('name')?.hasError('required')">Name is required</mat-error>
+        </mat-form-field>
 
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" formControlName="email" placeholder="Enter your email">
-        <div class="error-message" *ngIf="signupForm.get('email')?.errors?.['required'] && signupForm.get('email')?.touched">
-          Email is required
-        </div>
-        <div class="error-message" *ngIf="signupForm.get('email')?.errors?.['email'] && signupForm.get('email')?.touched">
-          Please enter a valid email
-        </div>
-      </div>
+        <mat-form-field appearance="outline" class="animate-field">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" type="email" required autocomplete="email" placeholder="Enter your email">
+          <mat-error *ngIf="signupForm.get('email')?.hasError('required')">Email is required</mat-error>
+          <mat-error *ngIf="signupForm.get('email')?.hasError('email')">Please enter a valid email address</mat-error>
+        </mat-form-field>
 
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" formControlName="password" placeholder="Enter your password">
-        <div class="error-message" *ngIf="signupForm.get('password')?.errors?.['required'] && signupForm.get('password')?.touched">
-          Password is required
-        </div>
-        <div class="error-message" *ngIf="signupForm.get('password')?.errors?.['minlength'] && signupForm.get('password')?.touched">
-          Password must be at least 6 characters
-        </div>
-      </div>
+        <mat-form-field appearance="outline" class="animate-field">
+          <mat-label>Password</mat-label>
+          <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" required autocomplete="new-password" placeholder="Create a password">
+          <button mat-icon-button matSuffix type="button" (click)="togglePasswordVisibility()">
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="signupForm.get('password')?.hasError('required')">Password is required</mat-error>
+          <mat-error *ngIf="signupForm.get('password')?.hasError('minlength')">Password must be at least 6 characters</mat-error>
+        </mat-form-field>
 
-      <div class="form-group">
-        <label for="confirmPassword">Confirm Password</label>
-        <input type="password" id="confirmPassword" formControlName="confirmPassword" placeholder="Confirm your password">
-        <div class="error-message" *ngIf="signupForm.get('confirmPassword')?.errors?.['required'] && signupForm.get('confirmPassword')?.touched">
-          Confirm Password is required
+        <mat-form-field appearance="outline" class="animate-field">
+          <mat-label>Confirm Password</mat-label>
+          <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword" required autocomplete="new-password" placeholder="Confirm your password">
+          <button mat-icon-button matSuffix type="button" (click)="toggleConfirmPasswordVisibility()">
+            <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="signupForm.get('confirmPassword')?.hasError('required')">Please confirm your password</mat-error>
+          <mat-error *ngIf="signupForm.errors?.['mismatch'] && signupForm.get('confirmPassword')?.touched">Passwords do not match</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="animate-field">
+          <mat-label>User Type</mat-label>
+          <select formControlName="userType" required>
+            <option *ngFor="let type of userTypes" [value]="type.value">{{ type.label }}</option>
+          </select>
+          <mat-error *ngIf="signupForm.get('userType')?.hasError('required')">Please select a user type</mat-error>
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit" [disabled]="signupForm.invalid || isLoading" class="signup-btn">
+          <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+          <span *ngIf="!isLoading">Create Account</span>
+        </button>
+
+        <div *ngIf="showAnimatedMsg" [ngClass]="{'signup-success-msg': signupSuccess, 'signup-error-msg': !signupSuccess}" class="signup-animated-msg">
+          <mat-icon>{{ signupSuccess ? 'check_circle' : 'error' }}</mat-icon>
+          {{ signupSuccess ? 'Account created successfully! Redirecting...' : errorMessage }}
         </div>
-        <div class="error-message" *ngIf="signupForm.errors?.['mismatch'] && signupForm.get('confirmPassword')?.touched">
-          Passwords do not match
+
+        <div class="login-text">
+          Already have an account?
+          <a routerLink="/login">Login</a>
         </div>
-      </div>
-
-      <div class="form-group">
-        <label for="userType">I am a</label>
-        <select id="userType" formControlName="userType">
-          <option value="">Select user type</option>
-          <option value="student">Student</option>
-          <option value="instructor">Instructor</option>
-          <option value="admin">Admin</option>
-        </select>
-        <div class="error-message" *ngIf="signupForm.get('userType')?.errors?.['required'] && signupForm.get('userType')?.touched">
-          Please select a user type
-        </div>
-      </div>
-
-      <div class="error-message" *ngIf="errorMessage">
-        {{ errorMessage }}
-      </div>
-
-      <button type="submit" [disabled]="signupForm.invalid || isLoading">
-        {{ isLoading ? 'Creating Account...' : 'Sign Up' }}
-      </button>
-
-      <div class="login-link">
-        Already have an account? <a routerLink="/login">Log in</a>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
+
+  <div class="bubbles">
+    <span *ngFor="let b of bubbles"></span>
+  </div>
+
+  <button class="corner-logo" routerLink="/" matTooltip="Back to Home">
+    <mat-icon>home</mat-icon>
+    <span>FaceAI</span>
+  </button>
 </div>
