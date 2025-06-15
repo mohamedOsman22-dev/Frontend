@@ -31,14 +31,11 @@ export class SubjectAttendanceComponent implements OnInit {
   @Input() subjectId!: string;
   @Input() subject!: any;
 
-  manualName = '';
   manualId = '';
   cameraActive = false;
   stream: MediaStream | null = null;
   capturedImage: string = '';
   instructorId: string = '';
-  subjectName: string = '';
-
   students: { name: string; id: string }[] = [];
 
   @ViewChild('video') video!: ElementRef<HTMLVideoElement>;
@@ -54,22 +51,29 @@ export class SubjectAttendanceComponent implements OnInit {
     if (token) {
       const decoded: any = jwtDecode(token);
       this.instructorId = decoded.sub;
-    }
 
-    if (this.instructorId && this.subjectId) {
-      const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
-      this.http.get<any>(
-        `http://aps.tryasp.net/Instructors/${this.instructorId}/subjects/${this.subjectId}`,
-        { headers }
-      ).subscribe({
-        next: (res) => {
-          this.subjectName = res.name || 'Unnamed Subject';
-          this.students = res.students || [];
-        },
-        error: (err) => {
-          console.error('❌ Failed to load subject:', err);
-        }
+      const headers = new HttpHeaders({
+        Authorization: `Bearer ${token}`
       });
+
+      console.log('🆔 instructorId:', this.instructorId);
+      console.log('📚 subjectId:', this.subjectId);
+
+      // ✅ تحميل الطلاب
+      this.http.get<any>('http://aps.tryasp.net/Attendees', { headers })
+        .subscribe({
+          next: (res) => {
+            console.log('✅ Attendees:', res);
+            this.students = res || [];
+          },
+          error: (err) => {
+            console.error('❌ Failed to load attendees:', err);
+            this.students = [
+              { id: '1001', name: 'Student 1' },
+              { id: '1002', name: 'Student 2' }
+            ];
+          }
+        });
     }
   }
 
@@ -89,19 +93,31 @@ export class SubjectAttendanceComponent implements OnInit {
         }
       }).catch(err => {
         console.error('Camera access error:', err);
+        alert('⚠️ لا يمكن تشغيل الكاميرا. تأكد من الإعدادات!');
         this.cameraActive = false;
       });
     }, 100);
   }
 
   captureImage(): void {
+    console.log('📸 Capturing image...');
     const canvas = this.canvas?.nativeElement;
     const video = this.video?.nativeElement;
-    if (!canvas || !video) return;
+
+    if (!canvas || !video) {
+      console.warn('⚠️ canvas or video element not found!');
+      return;
+    }
 
     const context = canvas.getContext('2d');
-    context?.drawImage(video, 0, 0, 320, 240);
+    if (!context) {
+      console.error('❌ Failed to get canvas context');
+      return;
+    }
+
+    context.drawImage(video, 0, 0, 320, 240);
     this.capturedImage = canvas.toDataURL('image/jpeg');
+    console.log('✅ Image captured, length:', this.capturedImage.length);
 
     this.stopCamera();
     this.sendImageToApi();
@@ -114,25 +130,23 @@ export class SubjectAttendanceComponent implements OnInit {
   }
 
   addManualAttendance(): void {
-    if (!this.manualName || !this.manualId || !this.subjectId) return;
+    const selected = this.students.find(s => s.id === this.manualId);
+    if (!selected || !this.subjectId) return;
 
     const token = localStorage.getItem('token') || '';
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
 
     this.http.get(
-      `http://aps.tryasp.net/Attendees/${this.manualId}/subjects/${this.subjectId}`,
+      `http://aps.tryasp.net/Attendees/${selected.id}/subjects/${this.subjectId}`,
       { headers }
     ).subscribe({
       next: () => {
         const added = this.attendanceState.addToDraft({
-          name: this.manualName,
-          id: this.manualId
+          name: selected.name,
+          id: selected.id
         });
 
-        if (added) {
-          this.manualName = '';
-          this.manualId = '';
-        }
+        if (added) this.manualId = '';
       },
       error: () => {
         alert('❌ هذا الطالب غير مسجل في هذه المادة!');
@@ -166,31 +180,33 @@ export class SubjectAttendanceComponent implements OnInit {
       next: (res: any) => {
         const name = res.name || 'Student (from face)';
         const id = res.id || 'Unknown';
+        console.log('✅ Face API returned:', res);
         this.verifyAndAddStudent(name, id, headers);
       },
       error: (err) => {
-        console.error('Face check-in failed:', err);
+        console.error('❌ Face check-in failed:', err);
         alert('❌ فشل في التعرف على الوجه.');
       }
     });
   }
 
-  private verifyAndAddStudent(name: string, id: string, headers: HttpHeaders): void {
-    this.http.get(
-      `http://aps.tryasp.net/Attendees/${id}/subjects/${this.subjectId}`,
-      { headers }
-    ).subscribe({
-      next: () => {
-        const added = this.attendanceState.addToDraft({ name, id });
-        if (!added) {
-          alert('⚠️ الطالب موجود بالفعل.');
-        }
-      },
-      error: () => {
-        alert(`🚫 الطالب ${name} غير مسجل في هذه المادة.`);
-      }
-    });
-  }
+private verifyAndAddStudent(name: string, id: string, headers: HttpHeaders): void {
+  console.log('🔍 Verifying student:', name, id, this.subjectId);
+
+  this.http.get(
+    `http://aps.tryasp.net/Attendees/${id}/subjects/${this.subjectId}`,
+    { headers }
+  ).subscribe({
+    next: () => {
+      const added = this.attendanceState.addToDraft({ name, id });
+      if (!added) alert('⚠️ الطالب موجود بالفعل.');
+    },
+    error: () => {
+      alert(`🚫 الطالب ${name} غير مسجل في هذه المادة.`);
+    }
+  });
+}
+
 
   private dataURItoBlob(dataURI: string): Blob {
     const byteString = atob(dataURI.split(',')[1]);

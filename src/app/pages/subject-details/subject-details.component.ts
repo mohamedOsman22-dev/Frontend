@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -14,6 +13,8 @@ import { AttendanceStateService } from '../../services/attendance-state.service'
 @Component({
   selector: 'app-subject-details',
   standalone: true,
+  templateUrl: './subject-details.component.html',
+  styleUrls: ['./subject-attendance.component.scss'],
   imports: [
     CommonModule,
     MatTabsModule,
@@ -24,31 +25,29 @@ import { AttendanceStateService } from '../../services/attendance-state.service'
     FormsModule,
     SubjectAttendanceComponent,
     SubjectAttendanceReviewComponent,
-  ],
-templateUrl: './subject-details.component.html', 
-  styleUrls: ['./subject-attendance.component.scss']
+  ]
 })
 export class SubjectDetailsComponent implements OnInit {
   subject: any = null;
-  subjectId: string | null = null;
-  students: { name: string, id: string }[] = [];
-  selectedStudent: any = null;
+  subjectId: string = '';
 
   constructor(private attendanceState: AttendanceStateService) {}
 
   ngOnInit(): void {
     const stored = localStorage.getItem('selectedSubject');
-    if (stored) {
-      this.subject = JSON.parse(stored);
-      this.subjectId = this.subject.id || this.subject.name; // fallback: use name if id doesn't exist
-    } else {
-      console.error('❌ لا يوجد بيانات مادة محفوظة');
-    }
 
-    this.students = [
-      { name: 'Student 1', id: '1001' },
-      { name: 'Student 2', id: '1002' },
-    ];
+    if (stored) {
+      try {
+        this.subject = JSON.parse(stored);
+        this.subjectId = this.subject?.subjectId || this.subject?.id || this.subject?.name;
+
+        console.log('🆔 subjectId:', this.subjectId);
+      } catch (err) {
+        console.error('❌ Failed to parse subject from localStorage:', err);
+      }
+    } else {
+      console.warn('⚠️ No subject found in localStorage.');
+    }
   }
 
   sendToReview(): void {
@@ -56,14 +55,10 @@ export class SubjectDetailsComponent implements OnInit {
   }
 
   downloadPDF(): void {
-    alert('Download PDF feature coming soon.');
+    alert('📄 Download PDF feature coming soon.');
   }
 
   downloadCSV(): void {
-    alert('Download CSV feature coming soon.');
-  }
-
-  onStudentSelect(student: any) {
-    // logic if needed
+    alert('📊 Download CSV feature coming soon.');
   }
 }

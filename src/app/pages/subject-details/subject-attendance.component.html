@@ -1,9 +1,9 @@
 <div class="attendance-section">
 
-  <!-- ✅ عرض اسم المادة كـ Readonly -->
-  <mat-form-field appearance="outline" style="width: 300px; margin-bottom: 20px;">
+  <!-- ✅ عرض اسم المادة -->
+  <mat-form-field appearance="outline" style="width: 300px; margin-bottom: 1rem;">
     <mat-label>Subject Name</mat-label>
-    <input matInput [value]="subject.name || 'Unknown Subject'" disabled>
+    <input matInput [value]="subject?.name || 'Unnamed Subject'" readonly>
   </mat-form-field>
 
   <!-- ✅ قسم الكاميرا -->
@@ -38,26 +38,23 @@
   <div class="manual-card">
     <h3>✍️ Manual Attendance</h3>
 
-      <mat-form-field appearance="outline">
-      <mat-label>Subject Name</mat-label>
-      <input matInput [value]="subject?.name || 'Unknown'" disabled>
-      </mat-form-field>
-
-
-      <mat-form-field appearance="outline">
+    <div class="manual-form">
+      <mat-form-field appearance="outline" style="width: 300px;">
         <mat-label>Student ID</mat-label>
         <mat-select [(ngModel)]="manualId">
-          <mat-option *ngFor="let s of students" [value]="s.id">{{ s.id }}</mat-option>
+          <mat-option *ngFor="let s of students" [value]="s.id">
+            {{ s.id }} - {{ s.name }}
+          </mat-option>
         </mat-select>
       </mat-form-field>
 
-      <button mat-flat-button color="accent" (click)="addManualAttendance()">
+      <button mat-flat-button color="accent" (click)="addManualAttendance()" style="margin-top: 1rem;">
         Add Manually
       </button>
     </div>
 
     <!-- ✅ قائمة الحضور المؤقت -->
-    <div *ngIf="attendanceList.length > 0" class="att-list">
+    <div *ngIf="attendanceList.length > 0" class="att-list" style="margin-top: 2rem;">
       <h4>📋 Temporary Attendance List</h4>
       <ul>
         <li *ngFor="let student of attendanceList; let i = index" class="att-row">

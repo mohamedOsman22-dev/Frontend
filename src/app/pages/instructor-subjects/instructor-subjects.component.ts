@@ -62,8 +62,17 @@ error: string = '';
   });
 }
 openSubjectDetails(subject: any) {
+  console.log('📦 Navigating to subject:', subject);
+
+  const subjectId = subject.subjectId || subject.id || subject.name; // fallback to name
+
+  if (!subjectId) {
+    console.error('❌ subjectId غير موجود، لن يتم التوجيه!');
+    return;
+  }
+
   localStorage.setItem('selectedSubject', JSON.stringify(subject));
-  this.router.navigate(['/subject-details', subject.name]);
+  this.router.navigate(['/subject-details', subjectId]);
 }
 
 

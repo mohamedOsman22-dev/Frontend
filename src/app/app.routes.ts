@@ -38,11 +38,13 @@ export const routes: Routes = [
   },
 {
   path: 'subject-details/:id',
-  loadComponent: () => import('./pages/subject-details/subject-details.component')
-    .then(m => m.SubjectDetailsComponent),
-  canActivate: [RoleGuard], 
+  loadComponent: () =>
+    import('./pages/subject-details/subject-details.component')
+      .then(m => m.SubjectDetailsComponent),
+  canActivate: [RoleGuard],
   data: { roles: ['instructor'] }
 }
+
 
 ,
   { path: '**', redirectTo: '' }

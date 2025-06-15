@@ -64,12 +64,15 @@ export const routes: Routes = [
     canActivate: [RoleGuard],
     data: { roles: ['instructor'] }
   },
- {
+{
   path: 'subject-details/:id',
-  component: SubjectDetailsComponent,
+  loadComponent: () =>
+    import('./pages/subject-details/subject-details.component')
+      .then(m => m.SubjectDetailsComponent),
   canActivate: [RoleGuard],
-  data: { roles: ['Instructor'] }
+  data: { roles: ['instructor'] }
 }
+
 ,
   { path: '**', redirectTo: '' }
 
