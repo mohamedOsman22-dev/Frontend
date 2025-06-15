@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild, ElementRef, OnInit } from '@angular/core';
+import { Component, Input, ViewChild, ElementRef, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -27,16 +27,22 @@ import { jwtDecode } from 'jwt-decode';
     MatOptionModule
   ],
 })
-export class SubjectAttendanceComponent implements OnInit {
+export class SubjectAttendanceComponent implements OnInit, OnChanges {
   @Input() subjectId!: string;
   @Input() subject!: any;
 
+  manualName = '';
   manualId = '';
   cameraActive = false;
   stream: MediaStream | null = null;
   capturedImage: string = '';
   instructorId: string = '';
-  students: { name: string; id: string }[] = [];
+  subjectName: string = '';
+
+  students = [
+    { name: 'Student 1', id: '1001' },
+    { name: 'Student 2', id: '1002' }
+  ];
 
   @ViewChild('video') video!: ElementRef<HTMLVideoElement>;
   @ViewChild('canvas') canvas!: ElementRef<HTMLCanvasElement>;
@@ -46,34 +52,32 @@ export class SubjectAttendanceComponent implements OnInit {
     private http: HttpClient
   ) {}
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['subject'] && this.subject) {
+      this.subjectId = this.subject.id || this.subject.name;
+    }
+  }
+
   ngOnInit(): void {
     const token = localStorage.getItem('token');
     if (token) {
       const decoded: any = jwtDecode(token);
       this.instructorId = decoded.sub;
+    }
 
-      const headers = new HttpHeaders({
-        Authorization: `Bearer ${token}`
+    if (this.instructorId && this.subjectId) {
+      const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+      this.http.get<any>(
+        `http://aps.tryasp.net/Instructors/${this.instructorId}/subjects/${this.subjectId}`,
+        { headers }
+      ).subscribe({
+        next: (res) => {
+          this.subjectName = res.name || 'Unnamed Subject';
+        },
+        error: (err) => {
+          console.error('❌ Failed to load subject:', err);
+        }
       });
-
-      console.log('🆔 instructorId:', this.instructorId);
-      console.log('📚 subjectId:', this.subjectId);
-
-      // ✅ تحميل الطلاب
-      this.http.get<any>('http://aps.tryasp.net/Attendees', { headers })
-        .subscribe({
-          next: (res) => {
-            console.log('✅ Attendees:', res);
-            this.students = res || [];
-          },
-          error: (err) => {
-            console.error('❌ Failed to load attendees:', err);
-            this.students = [
-              { id: '1001', name: 'Student 1' },
-              { id: '1002', name: 'Student 2' }
-            ];
-          }
-        });
     }
   }
 
@@ -83,6 +87,7 @@ export class SubjectAttendanceComponent implements OnInit {
 
   startCamera(): void {
     this.cameraActive = true;
+
     setTimeout(() => {
       navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
         this.stream = stream;
@@ -93,31 +98,19 @@ export class SubjectAttendanceComponent implements OnInit {
         }
       }).catch(err => {
         console.error('Camera access error:', err);
-        alert('⚠️ لا يمكن تشغيل الكاميرا. تأكد من الإعدادات!');
         this.cameraActive = false;
       });
     }, 100);
   }
 
   captureImage(): void {
-    console.log('📸 Capturing image...');
-    const canvas = this.canvas?.nativeElement;
-    const video = this.video?.nativeElement;
+    const canvasEl = this.canvas?.nativeElement;
+    const videoEl = this.video?.nativeElement;
+    if (!canvasEl || !videoEl) return;
 
-    if (!canvas || !video) {
-      console.warn('⚠️ canvas or video element not found!');
-      return;
-    }
-
-    const context = canvas.getContext('2d');
-    if (!context) {
-      console.error('❌ Failed to get canvas context');
-      return;
-    }
-
-    context.drawImage(video, 0, 0, 320, 240);
-    this.capturedImage = canvas.toDataURL('image/jpeg');
-    console.log('✅ Image captured, length:', this.capturedImage.length);
+    const context = canvasEl.getContext('2d');
+    context?.drawImage(videoEl, 0, 0, 320, 240);
+    this.capturedImage = canvasEl.toDataURL('image/jpeg');
 
     this.stopCamera();
     this.sendImageToApi();
@@ -130,23 +123,25 @@ export class SubjectAttendanceComponent implements OnInit {
   }
 
   addManualAttendance(): void {
-    const selected = this.students.find(s => s.id === this.manualId);
-    if (!selected || !this.subjectId) return;
+    if (!this.manualName || !this.manualId || !this.subjectId) return;
 
     const token = localStorage.getItem('token') || '';
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
 
     this.http.get(
-      `http://aps.tryasp.net/Attendees/${selected.id}/subjects/${this.subjectId}`,
+      `http://aps.tryasp.net/Attendees/${this.manualId}/subjects/${this.subjectId}`,
       { headers }
     ).subscribe({
       next: () => {
         const added = this.attendanceState.addToDraft({
-          name: selected.name,
-          id: selected.id
+          name: this.manualName,
+          id: this.manualId
         });
 
-        if (added) this.manualId = '';
+        if (added) {
+          this.manualName = '';
+          this.manualId = '';
+        }
       },
       error: () => {
         alert('❌ هذا الطالب غير مسجل في هذه المادة!');
@@ -163,59 +158,70 @@ export class SubjectAttendanceComponent implements OnInit {
   }
 
   private sendImageToApi(): void {
-    if (!this.subjectId || !this.capturedImage) return;
+    if (!this.subjectId || !this.capturedImage) {
+      console.warn('⚠️ No subject ID or image to send');
+      return;
+    }
 
     const blob = this.dataURItoBlob(this.capturedImage);
     const formData = new FormData();
     formData.append('file', blob, `face-${Date.now()}.jpg`);
 
     const token = localStorage.getItem('token') || '';
-    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
 
-    this.http.post(
-      `http://aps.tryasp.net/Attendances/face-checkin?subjectId=${this.subjectId}`,
-      formData,
-      { headers }
-    ).subscribe({
+    const url = `http://aps.tryasp.net/Attendances/face-checkin?subjectId=${this.subjectId}`;
+
+    console.log('📤 Sending image to API...');
+    console.log('📦 Image blob size:', blob.size);
+
+    this.http.post(url, formData, { headers }).subscribe({
       next: (res: any) => {
-        const name = res.name || 'Student (from face)';
-        const id = res.id || 'Unknown';
-        console.log('✅ Face API returned:', res);
-        this.verifyAndAddStudent(name, id, headers);
+        const studentName = res.name || 'Student (from face)';
+        const studentId = res.id || 'Unknown';
+        this.verifyAndAddStudent(studentName, studentId, headers);
       },
       error: (err) => {
-        console.error('❌ Face check-in failed:', err);
-        alert('❌ فشل في التعرف على الوجه.');
+        console.error('Face check-in failed:', err);
+
+        // ✅ fallback تجريبي
+        const fallbackName = 'Fallback Student';
+        const fallbackId = '9999';
+        this.attendanceState.addToDraft({ name: fallbackName, id: fallbackId });
+        alert('❗Fallback added بسبب فشل في التعرّف');
       }
     });
   }
 
-private verifyAndAddStudent(name: string, id: string, headers: HttpHeaders): void {
-  console.log('🔍 Verifying student:', name, id, this.subjectId);
-
-  this.http.get(
-    `http://aps.tryasp.net/Attendees/${id}/subjects/${this.subjectId}`,
-    { headers }
-  ).subscribe({
-    next: () => {
-      const added = this.attendanceState.addToDraft({ name, id });
-      if (!added) alert('⚠️ الطالب موجود بالفعل.');
-    },
-    error: () => {
-      alert(`🚫 الطالب ${name} غير مسجل في هذه المادة.`);
-    }
-  });
-}
-
+  private verifyAndAddStudent(name: string, id: string, headers: HttpHeaders): void {
+    this.http.get(
+      `http://aps.tryasp.net/Attendees/${id}/subjects/${this.subjectId}`,
+      { headers }
+    ).subscribe({
+      next: () => {
+        const added = this.attendanceState.addToDraft({ name, id });
+        if (!added) {
+          alert('الطالب موجود بالفعل.');
+        }
+      },
+      error: () => {
+        alert(`🚫 الطالب ${name} غير مسجل في هذه المادة.`);
+      }
+    });
+  }
 
   private dataURItoBlob(dataURI: string): Blob {
     const byteString = atob(dataURI.split(',')[1]);
     const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
     const ab = new ArrayBuffer(byteString.length);
     const ia = new Uint8Array(ab);
+
     for (let i = 0; i < byteString.length; i++) {
       ia[i] = byteString.charCodeAt(i);
     }
+
     return new Blob([ab], { type: mimeString });
   }
 }

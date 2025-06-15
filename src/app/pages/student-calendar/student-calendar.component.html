@@ -1,7 +1,6 @@
 <div class="calendar-wrapper">
   <h2 class="calendar-title">My Attendance Schedule</h2>
 
-  <!-- إذا لم يكن هناك بيانات لعرضها -->
   <p *ngIf="message">{{ message }}</p>
 
   <table *ngIf="calendarEvents.length > 0">
@@ -17,9 +16,9 @@
       <tr *ngFor="let event of calendarEvents">
         <td>{{ event.subjectName }}</td>
         <td>{{ getDayOfWeek(event.dayOfWeek) }}</td>
-        <td>{{ event.startTime | date:'shortTime' }}</td>
-        <td>{{ event.endTime | date:'shortTime' }}</td>
+        <td>{{ getFormattedTime(event.startTime) }}</td>
+        <td>{{ getFormattedTime(event.endTime) }}</td>
       </tr>
     </tbody>
-  </table>
+  </table> 
 </div>

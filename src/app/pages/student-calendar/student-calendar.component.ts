@@ -1,57 +1,50 @@
 import { Component, OnInit } from '@angular/core';
-import { DataService } from '../../shared/data.service';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { StudentService, ScheduleItem } from '../../services/student.service';
 
 @Component({
   selector: 'app-student-calendar',
-  templateUrl: './student-calendar.component.html',
-  styleUrls: ['./student-calendar.component.scss'],
-  imports: [CommonModule, RouterModule],
   standalone: true,
+  imports: [CommonModule],
+  templateUrl: './student-calendar.component.html',
+  styleUrls: ['./student-calendar.component.scss']
 })
 export class StudentCalendarComponent implements OnInit {
-  calendarEvents: any[] = [];
-  selectedEvent: any = null;
+  calendarEvents: ScheduleItem[] = [];
   message: string = '';
 
-  constructor(private dataService: DataService) {}
+  constructor(private studentService: StudentService) {}
 
-  ngOnInit() {
-    const token = localStorage.getItem('token');
-    let studentId = '';
-    if (token) {
-      try {
-        const decoded = JSON.parse(atob(token.split('.')[1]));
-        studentId = decoded.id || decoded.userId || decoded.sub || '';
-      } catch (e) {
-        studentId = '';
-      }
-    }
-
-    this.dataService.getStudentCalendar(studentId).subscribe({
-      next: (events: any) => {
-        if (events && events.length > 0) {
-          this.calendarEvents = events;
+  ngOnInit(): void {
+    this.studentService.getStudentSchedule().subscribe({
+      next: (data: ScheduleItem[]) => {
+        if (data.length > 0) {
+          this.calendarEvents = data.map(event => ({
+            ...event,
+            startTime: new Date(`1970-01-01T${event.startTime}`),
+            endTime: new Date(`1970-01-01T${event.endTime}`)
+          }));
         } else {
-          this.message = "No subjects found for this student.";
+          this.message = 'No scheduled subjects found.';
         }
       },
-      error: (err) => {
-        console.error("Error:", err);
-        this.message = "Failed to load data.";
+      error: () => {
+        this.message = 'Failed to load schedule.';
       }
     });
   }
 
-  // دالة لتحويل رقم اليوم إلى اسم اليوم
-  getDayOfWeek(dayOfWeek: number): string {
+  getDayOfWeek(day: number): string {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[dayOfWeek];
+    return days[day % 7];
   }
 
-  // لعرض تفاصيل المادة عند النقر
-  showDetails(event: any) {
-    this.selectedEvent = event;
+  getFormattedTime(value: string | Date): string {
+    const date = typeof value === 'string' ? new Date(`1970-01-01T${value}`) : value;
+    return new Intl.DateTimeFormat('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(date);
   }
 }
