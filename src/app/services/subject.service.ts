@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Subject } from '../shared/interfaces/subject.interface';
@@ -11,13 +11,17 @@ export class SubjectService {
 
   constructor(private http: HttpClient) {}
 
-  getInstructorSubjects(instructorId?: string): Observable<Subject[]> {
-    if (!instructorId) {
-      instructorId = localStorage.getItem('instructorId') || '';
-    }
-    // Always fetch latest subjects from backend
-    return this.http.get<Subject[]>(`${this.apiUrl}/Instructors/${instructorId}/subjects`);
-  }
+  // subject.service.ts
+getInstructorSubjects(instructorId: string, headers: HttpHeaders): Observable<any[]> {
+  return this.http.get<any[]>(`http://aps.tryasp.net/Instructors/${instructorId}/subjects`, {
+    headers
+  });
+}
+
+
+
+
+
 
   assignSubjectToInstructor(instructorId: string, subjectId: string): Observable<any> {
     // This assumes a PUT or POST endpoint exists for assignment

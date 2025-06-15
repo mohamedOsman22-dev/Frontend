@@ -8,7 +8,9 @@ import { Course, CreateCourseDto, UpdateCourseDto } from '../shared/interfaces/c
   providedIn: 'root'
 })
 export class CourseService {
-  private apiUrl = `${environment.apiUrl}/courses`;
+  // تأكد من أن الرابط لا يحتوي على /api في النهاية
+  private apiUrl = `${environment.apiUrl}`;
+;
 
   constructor(private http: HttpClient) {}
 
@@ -46,4 +48,4 @@ export class CourseService {
   updateCourseStatus(courseId: string, status: string): Observable<Course> {
     return this.http.patch<Course>(`${this.apiUrl}/${courseId}/status`, { status });
   }
-} 
+}

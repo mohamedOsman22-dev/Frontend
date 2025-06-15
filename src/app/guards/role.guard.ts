@@ -1,46 +1,34 @@
 import { Injectable } from '@angular/core';
-import {
-  CanActivateFn,
-  ActivatedRouteSnapshot,
-  Router
-} from '@angular/router';
+import { CanActivate, ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
 
 @Injectable({ providedIn: 'root' })
-export class RoleGuard {
+export class RoleGuard implements CanActivate {
   constructor(private router: Router) {}
 
-  canActivate(route: ActivatedRouteSnapshot): boolean {
-    const allowedRoles = route.data['roles'] as string[];
-    // دالة لفك تشفير التوكن
-    function getRoleFromToken(): string | null {
-      const token = localStorage.getItem('token');
-      if (!token) return null;
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.role ? payload.role : null;
-      } catch {
-        return null;
-      }
-    }
-
-    const userRole = getRoleFromToken();
-
-    // لو الدور مش مسموح
-    if (!userRole || !allowedRoles.includes(userRole)) {
-      // ✅ لو الصفحة اللي بيحاول يدخلها login أو signup أو home نسمحله
-      const publicPages = ['login', 'signup', ''];
-      const currentPath = route.routeConfig?.path ?? '';
-
-      if (!publicPages.includes(currentPath)) {
-        // نوجهه لـ login
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 0);
-      }
-
-      return false;
-    }
-
-    return true;
+canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
+  const allowedRoles = (route.data['roles'] as string[]).map(r => r.toUpperCase());
+  const token = localStorage.getItem('token');
+  console.log('Token from localStorage:', token); 
+  if (!token) {
+    this.router.navigate(['/login']);
+    return false;
   }
+
+  let userRole: string | null = null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    userRole = payload.role || payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+    if (userRole) userRole = userRole.toUpperCase();
+  } catch (e) {
+    this.router.navigate(['/login']);
+    return false;
+  }
+
+  if (!userRole || !allowedRoles.includes(userRole)) {
+    this.router.navigate(['/login']);
+    return false;
+  }
+
+  return true;
+}
 }

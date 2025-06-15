@@ -1,19 +1,23 @@
-<mat-tab-group>
-  <mat-tab label="Attendees">
-    <app-subject-students [subjectId]="subjectId"></app-subject-students>
-  </mat-tab>
+<mat-tab-group *ngIf="subject">
+  <!-- تبويب 1: معلومات المادة -->
   <mat-tab label="Course Info">
-    <div *ngIf="subject">
-      <h3>{{ subject.name }}</h3>
-      <p>{{ subject.description }}</p>
-      <p>Start: {{ subject.startDate }}</p>
-      <p>End: {{ subject.endDate }}</p>
-    </div>
+    <h3>{{ subject.name }}</h3>
+    <p>تم إنشاؤه في: {{ subject.createdAt | date:'medium' }}</p>
   </mat-tab>
-  <mat-tab label="Attendance (Camera/Manual)">
-    <app-subject-attendance [subjectId]="subjectId"></app-subject-attendance>
+
+  <!-- تبويب 2: تسجيل الحضور -->
+  <mat-tab label="Take Attendance">
+    <app-subject-attendance [subject]="subject"></app-subject-attendance>
   </mat-tab>
+
+  <!-- تبويب 3: مراجعة وتسليم الحضور -->
   <mat-tab label="Review & Submit Attendance">
-    <app-subject-attendance-review [subjectId]="subjectId"></app-subject-attendance-review>
+    <app-subject-attendance-review [subject]="subject"></app-subject-attendance-review>
   </mat-tab>
-</mat-tab-group> 
+</mat-tab-group>
+
+<!-- رسالة في حال عدم وجود بيانات -->
+<div *ngIf="!subject" style="color: red; text-align: center; margin-top: 40px;">
+  ⚠️ لم يتم العثور على بيانات المادة.
+</div>
+

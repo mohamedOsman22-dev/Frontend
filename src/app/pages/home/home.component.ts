@@ -18,8 +18,7 @@ export class HomeComponent {
 
   constructor(private router: Router) {}
 
-  goToLogin() {
-    this.isLeaving = true;
-    setTimeout(() => this.router.navigate(['/login']), 600);
+ goToLogin() {
+    this.router.navigate(['/login']);
   }
 }

@@ -11,16 +11,6 @@ import { LoginService } from '../../../app/services/login.service';
 import { jwtDecode } from 'jwt-decode';
 import { MatIconModule } from '@angular/material/icon';
 
-interface LoginResponse {
-  token: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    userType: string;
-  };
-}
-
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
@@ -48,8 +38,6 @@ export class LoginComponent {
   bubbles = Array(6);
   showAnimatedMsg = false;
   loginSuccess = false;
-  email = '';
-  password = '';
 
   constructor(
     private fb: FormBuilder,
@@ -58,80 +46,7 @@ export class LoginComponent {
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [
-        Validators.required,
-        Validators.pattern(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/)
-      ]]
-    });
-  }
-
-  // دالة لفك تشفير JWT Token
-  decodeToken(token: string): any {
-    try {
-      const payload = token.split('.')[1];
-      return JSON.parse(atob(payload));
-    } catch (e) {
-      return null;
-    }
-  }
-
-  login(): void {
-    alert('login called');
-    if (this.loginForm.invalid) {
-      return;
-    }
-    this.loading = true;
-    this.errorMsg = '';
-    this.successMsg = '';
-    this.showAnimatedMsg = false;
-    const { email, password } = this.loginForm.value;
-    this.loginService.login(email, password).subscribe({
-      next: (response: any) => {
-        this.loading = false;
-        this.loginSuccess = true;
-        this.showAnimatedMsg = true;
-        localStorage.setItem('token', response.token);
-        setTimeout(() => { this.showAnimatedMsg = false; }, 2500);
-        let decoded: any;
-        try {
-          decoded = jwtDecode(response.token);
-        } catch (e) {
-          this.errorMsg = 'خطأ في التوكن.';
-          this.loginSuccess = false;
-          return;
-        }
-        console.log('Decoded token:', decoded);
-        const role = (decoded.role || decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decoded.userType || decoded.user_type || '').toLowerCase();
-        console.log('Extracted role:', role);
-        if (role === 'instructor') {
-          localStorage.setItem('instructorId', decoded.id || decoded.instructorId || decoded.sub || decoded.userId || '');
-        } else if (role === 'admin') {
-          localStorage.setItem('instructorId', decoded.id || decoded.instructorId || decoded.sub || decoded.userId || '');
-        } else if (role === 'attendee') {
-          localStorage.setItem('instructorId', decoded.id || decoded.instructorId || decoded.sub || decoded.userId || '');
-        }
-        setTimeout(() => {
-          if (role === 'admin') {
-            this.router.navigate(['/dashboard']);
-          } else if (role === 'student' || role === 'attendee') {
-            this.router.navigate(['/student-calendar']);
-          } else if (role === 'instructor') {
-            this.router.navigate(['/subjects']);
-          } else {
-            this.errorMsg = `لم يتم التعرف على نوع المستخدم أو ليس لديك صلاحية الدخول هنا. الدور المستخرج: [${role}]`;
-            this.loginSuccess = false;
-            this.showAnimatedMsg = true;
-            setTimeout(() => { this.showAnimatedMsg = false; }, 3500);
-            console.error('Unknown or unauthorized user role:', role, decoded);
-          }
-        }, 1200);
-      },
-      error: (error: string) => {
-        this.loading = false;
-        this.loginSuccess = false;
-        this.showAnimatedMsg = true;
-        setTimeout(() => { this.showAnimatedMsg = false; }, 2500);
-      }
+      password: ['', [Validators.required]]
     });
   }
 
@@ -139,20 +54,60 @@ export class LoginComponent {
     this.hidePassword = !this.hidePassword;
   }
 
-  onLogin() {
-    this.loginService.login(this.email, this.password).subscribe(result => {
-      if (result.userType === 'instructor') {
-        this.router.navigate(['/instructor-subject']);
-      } else if (result.userType === 'attendee') {
-        this.router.navigate(['/calendar']);
-      } else if (result.userType === 'admin') {
-        this.router.navigate(['/dashboard']);
-      } else {
-        // معالجة حالة غير معروفة
-        alert('نوع مستخدم غير معروف');
+ login(): void {
+  if (this.loginForm.invalid) return;
+
+  const { email, password } = this.loginForm.value;
+
+  this.loginService.login(email, password).subscribe(res => {
+    console.log('API RESPONSE:', res);
+
+    if ('error' in res) {
+      this.errorMsg = res.error;
+      return;
+    }
+
+    const token = res.token;
+    localStorage.setItem('token', token);
+
+    let decoded: any;
+    try {
+      decoded = jwtDecode(token);
+      console.log('Decoded Token:', JSON.stringify(decoded, null, 2));
+    } catch (e) {
+      this.errorMsg = 'Invalid token';
+      return;
+    }
+
+    // استخراج الدور وتأكد من أن أول حرف كبير
+    let role =
+      decoded.role ||
+      decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ||
+      decoded.userType ||
+      decoded.user_type ||
+      '';
+
+    // التأكد من أن أول حرف من الدور كبير
+    role = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+
+    console.log('ROLE:', role);
+    console.log('Detected role:', role);
+
+    setTimeout(() => {
+      switch (role) {
+        case 'Instructor': // سيتم الآن استخدام "Instructor" مع أول حرف كبير
+          this.router.navigate(['/subjects']);
+          break;
+        case 'Attendee': // سيتم الآن استخدام "Attendee" مع أول حرف كبير
+          this.router.navigate(['/student-calendar']);
+          break;
+        case 'Admin': // سيتم الآن استخدام "Admin" مع أول حرف كبير
+          this.router.navigate(['/dashboard']);
+          break;
+        default:
+          this.router.navigate(['/']);
       }
-    }, error => {
-      alert('خطأ في تسجيل الدخول');
-    });
-  }
+    }, 100);
+  });
+}
 }

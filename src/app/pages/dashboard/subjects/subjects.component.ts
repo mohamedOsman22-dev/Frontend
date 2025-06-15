@@ -2,10 +2,13 @@ import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { HttpHeaders } from '@angular/common/http';
 import { DataService, Subject } from '../../../shared/data.service';
 import { Instructor } from '../../../shared/data.service';
+import { SubjectService } from '../../../services/subject.service';
 
 interface SubjectDate {
+  id?: string;
   day?: string;
   dayOfWeek?: number;
   from?: string;
@@ -32,32 +35,42 @@ export class SubjectsComponent implements OnInit {
 
   editNameMode = false;
 
-  // جدول المواعيد
   showDateDialog = false;
   editDateMode = false;
   editDate: SubjectDate = {};
   editingDateIndex: number | null = null;
   daysOfWeek: string[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
   selectedInstructor: Instructor | null = null;
 
-  constructor(private dataService: DataService) {}
+  constructor(private dataService: DataService, private subjectService: SubjectService) {}
 
   ngOnInit() {
-    this.dataService.getSubjects().subscribe((subjects: any[]) => {
-      // تأكد أن كل subject يحتوي على dates
-      this.subjects = (Array.isArray(subjects) ? subjects : []).map(subj => ({
-        ...subj,
-        dates: subj.dates || subj.subjectDates || []
-      }));
-      this.subjectsChanged.emit(this.subjects.length);
-      if (!this.selectedSubject && this.subjects.length > 0) {
-        this.selectedSubject = this.subjects[0];
-      }
-    });
+    const token = localStorage.getItem('token');
+    if (token) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const instructorId = payload.sub;
+
+      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+      this.subjectService.getInstructorSubjects(instructorId, headers).subscribe((subjects: any[]) => {
+        this.subjects = (Array.isArray(subjects) ? subjects : []).map(subj => ({
+          ...subj,
+          id: subj.id || subj.name || '',
+          dates: subj.dates || subj.subjectDates || []
+        }));
+
+        this.subjectsChanged.emit(this.subjects.length);
+        if (!this.selectedSubject && this.subjects.length > 0) {
+          this.selectedSubject = this.subjects[0];
+        }
+      });
+    } else {
+      console.error('No token found in localStorage');
+    }
   }
 
   selectSubject(subj: Subject) {
+    if (!subj.id) return;
     this.dataService.getSubjectById(subj.id).subscribe((apiSubj: any) => {
       this.selectedSubject = {
         ...apiSubj,
@@ -74,6 +87,7 @@ export class SubjectsComponent implements OnInit {
   }
 
   openEditDialog(subj: Subject) {
+    if (!subj.id) return;
     this.editMode = true;
     this.dataService.getSubjectById(subj.id).subscribe((apiSubj: any) => {
       this.editSubject = {
@@ -93,38 +107,37 @@ export class SubjectsComponent implements OnInit {
     if (this.editMode && this.selectedSubject) {
       this.editSubject.id = this.selectedSubject.id;
       this.dataService.patchSubject(this.editSubject.id, this.editSubject).subscribe(() => {
-        this.dataService.getSubjects().subscribe(subjects => {
-          this.subjects = subjects;
-          this.selectedSubject = this.subjects.find(s => s.id === this.editSubject.id) || null;
-        });
+        this.refreshSubjects();
       });
     } else if (!this.editMode) {
       this.dataService.addSubject({ ...this.editSubject }).subscribe(() => {
-        this.dataService.getSubjects().subscribe(subjects => {
-          this.subjects = subjects;
-          this.selectedSubject = this.subjects[this.subjects.length-1] || null;
-        });
+        this.refreshSubjects();
       });
     }
     this.showDialog = false;
   }
 
-  deleteSubject(subj: Subject) {
-    if (!subj.id) return;
-    this.dataService.deleteSubject(subj.id).subscribe(() => {
-      this.dataService.getSubjects().subscribe(subjects => {
-        this.subjects = subjects;
-        if (this.selectedSubject?.id === subj.id) {
-          this.selectedSubject = this.subjects[0] || null;
-        }
-      });
+  refreshSubjects() {
+    this.dataService.getSubjects().subscribe(subjects => {
+      this.subjects = subjects;
+      this.selectedSubject = this.subjects.find(s => s.id === this.editSubject.id) || this.subjects[0] || null;
     });
   }
 
-  // ========== جدول المواعيد ==========
+  deleteSubject(subj: Subject) {
+    if (!subj.id) return;
+    this.dataService.deleteSubject(subj.id).subscribe(() => {
+      this.refreshSubjects();
+    });
+  }
+
   openAddDateDialog(subject: Subject) {
     this.editDateMode = false;
-    this.editDate = { day: 'Sunday', from: '00:00', to: '00:00' };
+    this.editDate = {
+      day: 'Sunday',
+      from: '00:00',
+      to: '00:00'
+    };
     this.editingDateIndex = null;
     this.showDateDialog = true;
   }
@@ -133,11 +146,12 @@ export class SubjectsComponent implements OnInit {
     this.editDateMode = true;
     const date = subject.dates[index];
     this.editDate = {
+      id: date.id, // <-- الآن ممكن لأنه اختياري
       day: typeof date.dayOfWeek === 'number'
-        ? ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][date.dayOfWeek]
+        ? this.daysOfWeek[date.dayOfWeek]
         : date.day || 'Sunday',
-      from: date.startTime ? date.startTime.substring(0,5) : (date.from || '00:00'),
-      to: date.endTime ? date.endTime.substring(0,5) : (date.to || '00:00')
+      from: date.startTime?.substring(0, 5) || date.from || '00:00',
+      to: date.endTime?.substring(0, 5) || date.to || '00:00'
     };
     this.editingDateIndex = index;
     this.showDateDialog = true;
@@ -146,7 +160,6 @@ export class SubjectsComponent implements OnInit {
   saveDate() {
     if (!this.selectedSubject) return;
 
-    // تحقق من صحة الوقت
     const from = this.editDate.from || '';
     const to = this.editDate.to || '';
     if (!from || !to || from === '00:00' || to === '00:00') {
@@ -154,40 +167,28 @@ export class SubjectsComponent implements OnInit {
       return;
     }
 
-    if (this.editDateMode && this.editingDateIndex !== null && this.selectedSubject.dates) {
-      this.selectedSubject.dates![this.editingDateIndex] = { ...this.editDate };
-      this.dataService.getSubjectById(this.selectedSubject!.id!).subscribe((apiSubj: any) => {
-        if (apiSubj && this.selectedSubject) {
-          this.selectedSubject = { ...apiSubj, dates: (apiSubj.subjectDates || []).map((d: any) => d as SubjectDate) };
-        }
-      });
+    if (this.editDateMode && this.editingDateIndex !== null) {
+this.selectedSubject.dates![this.editingDateIndex] = { id: '', ...this.editDate };
     } else if (this.selectedSubject.id) {
-      this.dataService.postSubjectDates(this.selectedSubject!.id!, this.editDate).subscribe(() => {
-        this.dataService.getSubjectById(this.selectedSubject!.id!).subscribe((apiSubj: any) => {
-          if (apiSubj && this.selectedSubject) {
-            this.selectedSubject = { ...apiSubj, dates: (apiSubj.subjectDates || []).map((d: any) => d as SubjectDate) };
-          }
-        });
+      this.dataService.postSubjectDates(this.selectedSubject.id, this.editDate).subscribe(() => {
+        this.selectSubject(this.selectedSubject!);
       });
     }
+
     this.showDateDialog = false;
   }
 
   deleteDate(subject: Subject, index: number) {
-    const date: any = subject.dates[index];
-    const dateId = date && date.id;
-    if (dateId) {
+const dateId = (subject.dates[index] as any)?.id;
+    if (dateId && subject.id) {
       this.dataService.deleteSubjectDate(subject.id, dateId).subscribe(() => {
-        this.dataService.getSubjectById(subject.id).subscribe((apiSubj: any) => {
-          subject.dates = apiSubj.dates;
-        });
+        this.selectSubject(subject);
       });
     } else {
       subject.dates.splice(index, 1);
     }
   }
 
-  // Add Delete All Subjects button
   deleteAllSubjects() {
     this.dataService.deleteAllSubjects().subscribe(() => {
       this.subjects = [];
@@ -195,23 +196,22 @@ export class SubjectsComponent implements OnInit {
     });
   }
 
-  // Get attendees for a subject
   getSubjectAttendees(subjectId: string) {
+    if (!subjectId) return;
     this.dataService.getSubjectAttendees(subjectId).subscribe(attendees => {
-      // handle attendees (e.g., show in modal or assign to property)
+      // handle attendees
     });
   }
 
-  getDayName(day: number|string|undefined): string {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  getDayName(day: number | string | undefined): string {
+    const days = this.daysOfWeek;
     if (typeof day === 'number' && day >= 0 && day <= 6) return days[day];
     if (!isNaN(Number(day))) return days[Number(day)] || '';
-    return day ? String(day) : '';
+    return String(day || '');
   }
 
   selectInstructor(person: Instructor) {
     this.selectedInstructor = person;
-    // جلب المواد من الـ API وربطها بالمدرس
     this.dataService.getSubjectsByInstructorId(person.id).subscribe((subjects: any[]) => {
       this.selectedInstructor!.subjects = subjects.map(s => s.id);
     });

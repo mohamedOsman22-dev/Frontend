@@ -14,4 +14,4 @@ import { CalendarComponent } from './components/calendar/calendar.component';
     CalendarComponent
   ]
 })
-export class AppModule { }
+export class AppModule { } 

@@ -1,31 +1,33 @@
-<div class="attendance-review">
-  <h4>Review & Edit Attendance</h4>
-  <p>سيتم عرض قائمة الطلاب الذين تم التعرف عليهم هنا مع إمكانية التعديل قبل الإرسال.</p>
-  <button mat-raised-button color="primary" disabled>
-    <mat-icon>save</mat-icon>
-    إرسال الحضور
-  </button>
-  <button mat-raised-button color="accent" disabled style="margin-right: 1rem;">
-    <mat-icon>picture_as_pdf</mat-icon>
-    تنزيل التقرير PDF
-  </button>
-  <!-- لاحقًا: جدول الطلاب مع إمكانية التعديل -->
-  <ul>
-    <li *ngFor="let student of attendanceList; let i = index">
-      <span *ngIf="editIndex !== i">{{ student.name }} ({{ student.id }})
-        <button (click)="startEdit(i)">Edit</button>
-        <button (click)="remove(i)">Remove</button>
-      </span>
-      <span *ngIf="editIndex === i">
-        <input [(ngModel)]="editName" placeholder="Name">
-        <input [(ngModel)]="editId" placeholder="ID">
-        <button (click)="saveEdit()">Save</button>
-      </span>
+<div class="attendance-review-section">
+  <h3>🧾 Review Attendance List</h3>
+
+  <!-- ✅ حالة عدم وجود طلاب -->
+  <div *ngIf="attendanceList.length === 0" class="empty-list">
+    <p>No attendance data available yet.</p>
+  </div>
+
+  <!-- ✅ قائمة الطلاب -->
+  <ul class="att-list" *ngIf="attendanceList.length > 0">
+    <li *ngFor="let student of attendanceList; let i = index" class="att-row">
+      <span>{{ student.name }} ({{ student.id }})</span>
+      <button mat-icon-button color="warn" (click)="remove(i)">
+        <mat-icon>delete</mat-icon>
+      </button>
     </li>
   </ul>
-  <button (click)="submitAttendance()" [disabled]="submitted">Submit Attendance</button>
-  <div *ngIf="submitted">
-    <button (click)="downloadPDF()">Download PDF</button>
-    <button (click)="downloadCSV()">Download CSV</button>
+
+  <!-- ✅ زر الإرسال النهائي -->
+  <div *ngIf="attendanceList.length > 0 && !reportReady" class="submit-section">
+    <button mat-flat-button color="primary" (click)="submitAttendance()">
+      Submit Attendance
+    </button>
   </div>
-</div> 
+
+  <!-- ✅ بعد الإرسال، عرض رسالة النجاح وزر تحميل التقرير -->
+  <div *ngIf="reportReady" class="download-section">
+    <p class="success-msg">✅ Attendance submitted successfully!</p>
+    <button mat-stroked-button color="accent" (click)="downloadPDF()">
+      Download PDF Report
+    </button>
+  </div>
+</div>

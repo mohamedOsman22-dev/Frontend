@@ -167,3 +167,53 @@ html {
   background: radial-gradient(ellipse at top left, $main-bg 60%, darken($main-bg, 10%) 100%);
   color: lighten($primary-color, 10%);
 }
+/* Example styles */
+.calendar-bg {
+  background-color: #f0f0f0;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.calendar-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.calendar-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.event-details-modal {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.event-details-modal h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.event-details-modal p {
+  font-size: 16px;
+}

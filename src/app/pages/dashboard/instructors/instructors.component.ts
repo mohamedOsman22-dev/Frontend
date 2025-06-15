@@ -157,15 +157,19 @@ export class InstructorsComponent implements OnInit {
     obs.pipe(finalize(() => this.showLoader = false)).subscribe(
       (res: any) => {
         // Call auto-register after add/edit
-        const instructorId = res?.id || res?._id || res?.Id || this.editInstructor.id;
+       const instructorId = res?.id || res?._id || res?.Id || this.editInstructor.id;
+        console.log('Instructor ID for auto-register:', instructorId);
+
         if (instructorId) {
           this.dataService.autoRegisterUser(instructorId).subscribe({
-            next: () => {},
-            error: () => {
-              this.errorMsg = 'تم حفظ المدرس لكن حدث خطأ في تسجيل الحساب.';
-              setTimeout(() => this.errorMsg = '', 3000);
-            }
-          });
+          next: (res) => console.log('Auto-register success'),
+          error: (err) => console.log('Auto-register failed', err)
+          
+        });
+          this.errorMsg = 'تم حفظ المدرس لكن حدث خطأ في تسجيل الحساب.';
+              setTimeout(() => this.errorMsg = '', 3000);    
+            
+          
         }
         this.successMsg = this.editMode ? 'تم تحديث بيانات المدرس بنجاح' : 'تم إضافة المدرس بنجاح';
         setTimeout(() => this.successMsg = '', 3000);

@@ -1,12 +1,41 @@
+:host {
+  display: block;
+  padding: 32px;
+  background-color: #f9f9f9;
+  min-height: 100vh;
+}
+
+/* تنسيق عنوان المادة */
 h3 {
-  margin-top: 1.5rem;
-  font-size: 1.5rem;
-  color: #4a3fbf;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
 }
+
+/* تنسيق النصوص */
 p {
+  font-size: 1rem;
   color: #555;
-  margin-bottom: 0.5rem;
+  margin-bottom: 8px;
 }
+
+/* المساحة بين التابات والمحتوى */
 mat-tab-group {
-  margin-top: 2rem;
-} 
+  margin-bottom: 32px;
+}
+
+/* تنسيق رسالة الخطأ */
+div[style*="color: red"] {
+  font-size: 1.2rem;
+  padding: 16px;
+  border: 1px solid #f44336;
+  background-color: #ffe6e6;
+  border-radius: 8px;
+}
+
+/* تنسيق نموذج اختيار الطالب */
+mat-form-field {
+  width: 300px;
+  margin-top: 20px;
+}

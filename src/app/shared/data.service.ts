@@ -11,6 +11,7 @@ export interface Subject {
   instructorId?: string;
   instructorIds: string[];
   dates: {
+    id: any;
     day?: string;
     dayOfWeek?: number;
     from?: string;
@@ -175,8 +176,9 @@ export class DataService {
 
   // === New: Get subjects by instructor ===
   getSubjectsByInstructorId(instructorId: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/Instructors/${instructorId}/subjects`, this.getAuthHeaders());
-  }
+  return this.http.get<any[]>(`${this.apiUrl}/Instructors/${instructorId}/subjects`, this.getAuthHeaders());}
+
+
 
   // === Helpers ===
   getInstructorName(id: string): string {
@@ -299,5 +301,10 @@ export class DataService {
    */
   autoRegisterUser(id: string) {
     return this.http.post(`${this.apiUrl}/Auth/auto-register/${id}`, {});
+  }
+  
+  getStudentCalendar(studentId: string): Observable<any> {
+    // قم بإنشاء الطلب الذي يرسل إلى الـ API للحصول على البيانات
+    return this.http.get(`${this.apiUrl}/attendances/${studentId}/calendar`);
   }
 }

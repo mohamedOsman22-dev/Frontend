@@ -1,24 +1,25 @@
-<app-navbar-student></app-navbar-student>
-<div class="calendar-bg">
-  <div class="calendar-wrapper">
-    <h2 class="calendar-title">My Subjects Calendar</h2>
-    <full-calendar
-      [plugins]="calendarPlugins"
-      [initialView]="'dayGridMonth'"
-      [events]="calendarEvents"
-      [headerToolbar]="{
-        left: 'prev today next',
-        center: 'title',
-        right: 'dayGridMonth'
-      }"
-      (eventClick)="handleEventClick($event)">
-    </full-calendar>
-    <div *ngIf="selectedEvent" class="event-details-modal">
-      <h3>{{ selectedEvent.title }}</h3>
-      <p><b>Date:</b> {{ selectedEvent.start | date:'fullDate' }}</p>
-      <p><b>Time:</b> {{ selectedEvent.start | date:'shortTime' }}</p>
-      <p><b>Room:</b> {{ selectedEvent.extendedProps?.room }}</p>
-      <p><b>Details:</b> {{ selectedEvent.extendedProps?.details }}</p>
-    </div>
-  </div>
+<div class="calendar-wrapper">
+  <h2 class="calendar-title">My Attendance Schedule</h2>
+
+  <!-- إذا لم يكن هناك بيانات لعرضها -->
+  <p *ngIf="message">{{ message }}</p>
+
+  <table *ngIf="calendarEvents.length > 0">
+    <thead>
+      <tr>
+        <th>Subject</th>
+        <th>Day</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let event of calendarEvents">
+        <td>{{ event.subjectName }}</td>
+        <td>{{ getDayOfWeek(event.dayOfWeek) }}</td>
+        <td>{{ event.startTime | date:'shortTime' }}</td>
+        <td>{{ event.endTime | date:'shortTime' }}</td>
+      </tr>
+    </tbody>
+  </table>
 </div>

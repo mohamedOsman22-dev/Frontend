@@ -4,12 +4,10 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-
+import { jwtDecode } from 'jwt-decode';
 export interface LoginResponse {
   token: string;
-  user: { role: string; [key: string]: any };
-  userType?: string;
-  [key: string]: any;
+  [key: string]: any; // يسمح بأي خصائص إضافية
 }
 
 @Injectable({ providedIn: 'root' })
@@ -19,18 +17,51 @@ export class AuthService {
   private API_URL = environment.apiUrl;
 
   constructor(private http: HttpClient) {
-    const user = JSON.parse(localStorage.getItem('user') || 'null');
-    if (user && user.userType) this._role.next(user.userType as 'Attendee' | 'Instructor' | 'Admin');
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded: any = jwtDecode(token);
+        const role =
+          decoded.role ||
+          decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ||
+          decoded.userType ||
+          decoded.user_type ||
+          'guest';
+
+        this._role.next(role as 'Attendee' | 'Instructor' | 'Admin' | 'guest');
+      } catch (e) {
+        console.warn('Invalid token during service init.');
+      }
+    }
   }
 
   login(email: string, password: string): Observable<LoginResponse | { error: string }> {
     return this.http.post<LoginResponse>(`${this.API_URL}/auth/login`, { email, password }).pipe(
       tap(res => {
-        if (res && res.token && (res.userType || res.user?.role)) {
+        if (res && res.token) {
           localStorage.setItem('token', res.token);
-          localStorage.setItem('user', JSON.stringify(res));
-          const role = (res.userType || res.user?.role) as 'Attendee' | 'Instructor' | 'Admin' | 'guest';
-          this._role.next(role);
+
+          let role = 'guest';
+          try {
+            const decoded: any = jwtDecode(res.token);
+            role =
+              decoded.role ||
+              decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ||
+              decoded.userType ||
+              decoded.user_type ||
+              'guest';
+
+            // تخزين بيانات مبسطة
+            const user = {
+              role,
+              id: decoded.sub || decoded.userId || decoded.id || ''
+            };
+
+            localStorage.setItem('user', JSON.stringify(user));
+            this._role.next(role as 'Attendee' | 'Instructor' | 'Admin' | 'guest');
+          } catch (e) {
+            console.error('Error decoding token during login:', e);
+          }
         }
       }),
       catchError(error => {
@@ -62,4 +93,3 @@ export class AuthService {
     return user && user.id ? user.id : '';
   }
 }
-

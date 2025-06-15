@@ -1,52 +1,23 @@
-import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FullCalendarModule } from '@fullcalendar/angular';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin from '@fullcalendar/interaction';
+import { Component, OnInit } from '@angular/core';
 import { DataService } from '../../shared/data.service';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-student-calendar',
+  templateUrl: './student-calendar.component.html',
+  styleUrls: ['./student-calendar.component.scss'],
+  imports: [CommonModule, RouterModule],
   standalone: true,
-  imports: [CommonModule, FullCalendarModule],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  template: `
-    <div class="calendar-bg">
-      <div class="calendar-wrapper">
-        <h2 class="calendar-title">My Attendance Calendar</h2>
-        <full-calendar
-          [plugins]="calendarPlugins"
-          [initialView]="'dayGridMonth'"
-          [events]="calendarEvents"
-          [headerToolbar]="{
-            left: 'prev today next',
-            center: 'title',
-            right: 'dayGridMonth'
-          }"
-          (eventClick)="handleEventClick($event)">
-        </full-calendar>
-        <div *ngIf="selectedEvent" class="event-details-modal">
-          <h3>{{ selectedEvent.title }}</h3>
-          <p><b>Date:</b> {{ selectedEvent.start | date:'fullDate' }}</p>
-          <p><b>Time:</b> {{ selectedEvent.start | date:'shortTime' }}</p>
-          <p><b>Details:</b> {{ selectedEvent.extendedProps?.details }}</p>
-        </div>
-      </div>
-    </div>
-  `,
-  styleUrls: ['./student-calendar.component.scss']
 })
 export class StudentCalendarComponent implements OnInit {
-  calendarPlugins = [dayGridPlugin, interactionPlugin];
   calendarEvents: any[] = [];
   selectedEvent: any = null;
+  message: string = '';
 
-  constructor(
-    private dataService: DataService,
-  ) {}
+  constructor(private dataService: DataService) {}
 
   ngOnInit() {
-    // استخراج studentId من التوكن
     const token = localStorage.getItem('token');
     let studentId = '';
     if (token) {
@@ -57,32 +28,30 @@ export class StudentCalendarComponent implements OnInit {
         studentId = '';
       }
     }
-    this.dataService.getSubjectDatesForStudent(studentId).subscribe(events => {
-      this.calendarEvents = (events || []).map(ev => ({
-        title: ev.subjectName || 'Subject',
-        // title: ev.subjectName || 'Subject',
-        start: ev.date, // تأكد أن التاريخ بصيغة ISO
-        color: ev.color || '#7c4dff',
-        extendedProps: {
-          details: ev.details || ev.description || '',
-          room: ev.room || ''
+
+    this.dataService.getStudentCalendar(studentId).subscribe({
+      next: (events: any) => {
+        if (events && events.length > 0) {
+          this.calendarEvents = events;
+        } else {
+          this.message = "No subjects found for this student.";
         }
-      }));
+      },
+      error: (err) => {
+        console.error("Error:", err);
+        this.message = "Failed to load data.";
+      }
     });
   }
 
-  handleEventClick(arg: any) {
-    this.selectedEvent = arg.event;
+  // دالة لتحويل رقم اليوم إلى اسم اليوم
+  getDayOfWeek(dayOfWeek: number): string {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[dayOfWeek];
   }
 
-  dayClicked(event: any): void {
-    // For month view
-    if (event.day) {
-      const date = event.day.date;
-      const events = event.day.events;
-      // Your logic here
-      console.log(date, events);
-    }
-    // For week/day view, handle accordingly if needed
+  // لعرض تفاصيل المادة عند النقر
+  showDetails(event: any) {
+    this.selectedEvent = event;
   }
 }
