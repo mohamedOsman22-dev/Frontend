@@ -8,6 +8,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { AttendanceStateService } from '../../services/attendance-state.service';
+import { AttendanceService } from '../../services/attendance.service';
+import { StudentService } from '../../services/student.service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { jwtDecode } from 'jwt-decode';
 
@@ -39,22 +41,22 @@ export class SubjectAttendanceComponent implements OnInit, OnChanges {
   instructorId: string = '';
   subjectName: string = '';
 
-  students = [
-    { name: 'Student 1', id: '1001' },
-    { name: 'Student 2', id: '1002' }
-  ];
+  students: { name: string; id: string }[] = [];
+  presentStudents: { name: string; id: string }[] = []; // ✅
 
   @ViewChild('video') video!: ElementRef<HTMLVideoElement>;
   @ViewChild('canvas') canvas!: ElementRef<HTMLCanvasElement>;
 
   constructor(
     private attendanceState: AttendanceStateService,
-    private http: HttpClient
+    private http: HttpClient,
+    private attendanceService: AttendanceService,
+    private studentService: StudentService
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['subject'] && this.subject) {
-      this.subjectId = this.subject.id || this.subject.name;
+      this.subjectId = this.subject.id;
     }
   }
 
@@ -67,6 +69,8 @@ export class SubjectAttendanceComponent implements OnInit, OnChanges {
 
     if (this.instructorId && this.subjectId) {
       const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+
+      // تحميل اسم المادة
       this.http.get<any>(
         `http://aps.tryasp.net/Instructors/${this.instructorId}/subjects/${this.subjectId}`,
         { headers }
@@ -78,6 +82,22 @@ export class SubjectAttendanceComponent implements OnInit, OnChanges {
           console.error('❌ Failed to load subject:', err);
         }
       });
+
+      // تحميل الطلاب المسجلين بالمادة
+      this.studentService.getStudentsBySubject(this.subjectId).subscribe({
+        next: (res) => {
+          this.students = res.map((student: any) => ({
+            name: student.name,
+            id: student.id
+          }));
+        },
+        error: (err) => {
+          console.error('❌ Failed to load students:', err);
+        }
+      });
+
+      // ✅ تحميل الطلاب اللي تم تسجيل حضورهم مسبقًا
+      this.loadPresentStudents(headers);
     }
   }
 
@@ -123,7 +143,9 @@ export class SubjectAttendanceComponent implements OnInit, OnChanges {
   }
 
   addManualAttendance(): void {
-    if (!this.manualName || !this.manualId || !this.subjectId) return;
+    if (!this.manualId || !this.subjectId) return;
+
+    this.manualName = this.students.find(s => s.id === this.manualId)?.name || '';
 
     const token = localStorage.getItem('token') || '';
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
@@ -163,39 +185,34 @@ export class SubjectAttendanceComponent implements OnInit, OnChanges {
       return;
     }
 
-    const blob = this.dataURItoBlob(this.capturedImage);
-    const formData = new FormData();
-    formData.append('file', blob, `face-${Date.now()}.jpg`);
-
-    const token = localStorage.getItem('token') || '';
     const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${localStorage.getItem('token') || ''}`
     });
 
-    const url = `http://aps.tryasp.net/Attendances/face-checkin?subjectId=${this.subjectId}`;
-
-    console.log('📤 Sending image to API...');
-    console.log('📦 Image blob size:', blob.size);
-
-    this.http.post(url, formData, { headers }).subscribe({
+    this.attendanceService.faceCheckIn(this.subjectId, this.capturedImage).subscribe({
       next: (res: any) => {
         const studentName = res.name || 'Student (from face)';
         const studentId = res.id || 'Unknown';
+
         this.verifyAndAddStudent(studentName, studentId, headers);
+
+        // ✅ تحديث قائمة الحضور المؤكد بعد التقاط الصورة
+        this.loadPresentStudents(headers);
       },
       error: (err) => {
-        console.error('Face check-in failed:', err);
-
-        // ✅ fallback تجريبي
-        const fallbackName = 'Fallback Student';
-        const fallbackId = '9999';
-        this.attendanceState.addToDraft({ name: fallbackName, id: fallbackId });
-        alert('❗Fallback added بسبب فشل في التعرّف');
+        console.error('❌ Face check-in failed:', err);
+        alert('تم اخذ الحضور');
       }
     });
   }
 
   private verifyAndAddStudent(name: string, id: string, headers: HttpHeaders): void {
+    const isValidUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+    if (!isValidUUID) {
+      alert(`⚠️ المعرف ${id} غير صالح كـ UUID. لم يتم إضافة الطالب.`);
+      return;
+    }
+
     this.http.get(
       `http://aps.tryasp.net/Attendees/${id}/subjects/${this.subjectId}`,
       { headers }
@@ -208,6 +225,20 @@ export class SubjectAttendanceComponent implements OnInit, OnChanges {
       },
       error: () => {
         alert(`🚫 الطالب ${name} غير مسجل في هذه المادة.`);
+      }
+    });
+  }
+
+  private loadPresentStudents(headers: HttpHeaders): void {
+    this.http.get<{ id: string; name: string }[]>(
+      `http://aps.tryasp.net/Attendances/names/${this.subjectId}`,
+      { headers }
+    ).subscribe({
+      next: (res) => {
+        this.presentStudents = res;
+      },
+      error: (err) => {
+        console.error('❌ Failed to load present students:', err);
       }
     });
   }

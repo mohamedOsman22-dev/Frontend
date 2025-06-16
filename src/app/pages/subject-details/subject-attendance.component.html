@@ -3,7 +3,7 @@
   <!-- ✅ عرض اسم المادة -->
   <mat-form-field appearance="outline" style="width: 300px; margin-bottom: 1rem;">
     <mat-label>Subject Name</mat-label>
-    <input matInput [value]="subject?.name || 'Unnamed Subject'" readonly>
+    <input matInput [value]="subjectName || 'Unnamed Subject'" readonly>
   </mat-form-field>
 
   <!-- ✅ قسم الكاميرا -->
@@ -17,7 +17,7 @@
 
     <div *ngIf="cameraActive" class="camera-view">
       <video #video width="320" height="240" autoplay muted></video>
-      <canvas #canvas width="320" height="240" style="display:none;"></canvas>
+      <canvas #canvas width="320" height="240" style="display: none;"></canvas>
 
       <div class="camera-actions">
         <button mat-flat-button color="primary" (click)="captureImage()">
@@ -29,6 +29,16 @@
           Close
         </button>
       </div>
+    </div>
+
+    <!-- ✅ الطلاب اللي تم تسجيل حضورهم مسبقًا -->
+    <div *ngIf="presentStudents.length > 0" class="present-students" style="margin-top: 1.5rem;">
+      <h4>✅ Students Already Marked Present</h4>
+      <ul>
+        <li *ngFor="let student of presentStudents">
+          {{ student.name }} ({{ student.id }})
+        </li>
+      </ul>
     </div>
   </div>
 

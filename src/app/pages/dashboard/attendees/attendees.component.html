@@ -7,10 +7,8 @@
         *ngFor="let person of filteredAttendees"
         [class.selected]="selectedAttendee === person"
         (click)="selectAttendee(person)">
-        <img [src]="getAvatarUrl(person)" class="attendee-avatar" />
         <div class="attendee-info">
           <h4>{{person.name || '---'}}</h4>
-          <p>{{person.email || '---'}}</p>
         </div>
         <span class="badge" *ngIf="person.assignedSubjects?.length">{{person.assignedSubjects.length}}</span>
         <mat-icon class="edit-ic" (click)="openEditDialog(person); $event.stopPropagation();">edit</mat-icon>
@@ -40,7 +38,6 @@
     <ng-container *ngIf="selectedAttendee; else emptyDetails">
       <img [src]="selectedAttendee.avatar || 'assets/placeholder.jpg'" class="details-avatar" />
       <h3>{{ selectedAttendee.name || '---' }}</h3>
-      <p>{{ selectedAttendee.email || '---' }}</p>
       <div class="number-line" *ngIf="selectedAttendee.number">
         <mat-icon>call</mat-icon>
         <span>{{selectedAttendee.number}}</span>
@@ -91,7 +88,7 @@
         <button type="submit" class="save-btn animate-btn">
           <mat-icon>{{editMode ? 'save' : 'person_add_alt_1'}}</mat-icon> {{editMode ? 'Update' : 'Add'}}
         </button>
-        <button type="button" class="cancel animate-btn" (click)="showDialog=false">
+        <button type="button" class="  animate-btn" (click)="showDialog=false">
           <mat-icon>close</mat-icon> Cancel
         </button>
       </div>

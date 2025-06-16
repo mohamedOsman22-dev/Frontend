@@ -54,8 +54,10 @@ export class LoginComponent {
     this.hidePassword = !this.hidePassword;
   }
 
- login(): void {
+login(): void {
   if (this.loginForm.invalid) return;
+
+  localStorage.removeItem('token');
 
   const { email, password } = this.loginForm.value;
 
@@ -68,7 +70,7 @@ export class LoginComponent {
     }
 
     const token = res.token;
-    localStorage.setItem('token', token);
+    localStorage.setItem('token', token); // ✅ توكن جديد محفوظ
 
     let decoded: any;
     try {
@@ -79,7 +81,6 @@ export class LoginComponent {
       return;
     }
 
-    // استخراج الدور وتأكد من أن أول حرف كبير
     let role =
       decoded.role ||
       decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ||
@@ -87,21 +88,19 @@ export class LoginComponent {
       decoded.user_type ||
       '';
 
-    // التأكد من أن أول حرف من الدور كبير
     role = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
 
     console.log('ROLE:', role);
-    console.log('Detected role:', role);
 
     setTimeout(() => {
       switch (role) {
-        case 'Instructor': // سيتم الآن استخدام "Instructor" مع أول حرف كبير
+        case 'Instructor':
           this.router.navigate(['/subjects']);
           break;
-        case 'Attendee': // سيتم الآن استخدام "Attendee" مع أول حرف كبير
+        case 'Attendee':
           this.router.navigate(['/student-calendar']);
           break;
-        case 'Admin': // سيتم الآن استخدام "Admin" مع أول حرف كبير
+        case 'Admin':
           this.router.navigate(['/dashboard']);
           break;
         default:
@@ -110,4 +109,12 @@ export class LoginComponent {
     }, 100);
   });
 }
+
 }
+
+function logout() {
+  throw new Error('Function not implemented.');
+}
+
+
+

@@ -55,31 +55,36 @@ export class SubjectAttendanceReviewComponent {
     this.attendanceState.removeFromReview(i);
   }
 
-  submitAttendance() {
-    const studentIds = this.attendanceList.map(s => s.id);
-    const token = localStorage.getItem('token') || '';
-    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+ submitAttendance() {
+  const studentIds = this.attendanceList
+    .map(s => s.id)
+    .filter(id => /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id));
 
-    if (!studentIds.length) {
-      alert('⚠️ No students in review list to submit.');
-      return;
-    }
-
-    this.http.post(
-      `http://aps.tryasp.net/Attendances/subjects/${this.subjectId}/attendees`,
-      studentIds,
-      { headers }
-    ).subscribe({
-      next: () => {
-        alert('✅ Attendance submitted successfully!');
-        this.reportReady = true;
-        this.attendanceState.clearReviewList();
-      },
-      error: () => {
-        alert('❌ Failed to submit attendance.');
-      }
-    });
+  if (!studentIds.length) {
+    alert('🚫 لا يوجد طلاب بصيغة UUID صحيحة للإرسال.');
+    return;
   }
+
+  const token = localStorage.getItem('token') || '';
+  const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+
+  this.http.post(
+    `http://aps.tryasp.net/Attendances/subjects/${this.subjectId}/attendees`,
+    studentIds, // ✅ لاحظ إنها مصفوفة مباشرة
+    { headers }
+  ).subscribe({
+    next: () => {
+      alert('✅ Attendance submitted successfully!');
+      this.reportReady = true;
+      this.attendanceState.clearReviewList();
+    },
+    error: (err) => {
+      console.error('❌ Submit failed:', err);
+      alert('❌ Failed to submit attendance. يرجى التأكد من الصلاحيات أو صيغة البيانات.');
+    }
+  });
+}
+
 
   downloadPDF() {
     const token = localStorage.getItem('token') || '';

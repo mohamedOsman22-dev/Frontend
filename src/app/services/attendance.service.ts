@@ -61,16 +61,19 @@ export class AttendanceService {
   );
 }
 faceCheckIn(subjectId: string, base64Image: string): Observable<any> {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || '';
   const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
   const formData = new FormData();
-  formData.append('file', this.dataURItoBlob(base64Image), 'face.jpg');
+  formData.append('image', this.dataURItoBlob(base64Image), 'face.jpg'); // ✅ "image" وليس "file"
+
   return this.http.post(
     `${environment.apiUrl}/Attendances/face-checkin?subjectId=${subjectId}`,
     formData,
     { headers }
   );
 }
+
 
 // استخدم الدالة دي لتحويل الـ base64 لـ Blob:
 private dataURItoBlob(dataURI: string): Blob {

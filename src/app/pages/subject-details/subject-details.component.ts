@@ -39,7 +39,7 @@ export class SubjectDetailsComponent implements OnInit {
     if (stored) {
       try {
         this.subject = JSON.parse(stored);
-        this.subjectId = this.subject?.subjectId || this.subject?.id || this.subject?.name;
+        this.subjectId = this.subject?.id; // ✅ UUID فقط
 
         console.log('🆔 subjectId:', this.subjectId);
       } catch (err) {
